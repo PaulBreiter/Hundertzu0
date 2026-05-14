@@ -2,16 +2,16 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>COMIC QUIZ | Farbenfroh</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>COMIC QUIZ | Boss-Automatik</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; }
+        * { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; }
         body {
             font-family: 'Segoe UI', 'Fredoka', system-ui, sans-serif;
             background: #fef9e8;
-            padding: 20px;
+            padding: 16px;
             color: #1e2a3e;
         }
         .app-container { max-width: 1300px; margin: 0 auto; }
@@ -19,77 +19,105 @@
         .header-stats {
             background: white;
             border-radius: 32px;
-            padding: 20px 24px;
+            padding: 16px 20px;
             margin-bottom: 24px;
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
+            gap: 12px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.08);
             border: 2px solid #ffd966;
         }
-        .player-info { display: flex; gap: 12px; flex-wrap: wrap; font-weight: bold; }
-        .player-info span { background: #f0f2f5; padding: 6px 16px; border-radius: 40px; }
-        .hp-area { display: flex; align-items: center; gap: 12px; }
-        .hp-bar-bg { width: 160px; height: 14px; background: #e9ecef; border-radius: 20px; overflow: hidden; }
+        .player-info { display: flex; gap: 10px; flex-wrap: wrap; font-weight: bold; font-size: 0.9rem; }
+        .player-info span { background: #f0f2f5; padding: 5px 14px; border-radius: 40px; }
+        .hp-area { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .hp-bar-bg { width: 130px; height: 12px; background: #e9ecef; border-radius: 20px; overflow: hidden; }
         #hp-bar-fill { height: 100%; background: #2ecc71; transition: 0.3s; }
-        .boss-badge { background: #f39c12; color: white; padding: 6px 20px; border-radius: 40px; font-weight: bold; }
-        .file-badge { background: #e0e7ff; padding: 6px 14px; border-radius: 40px; font-size: 0.8rem; }
+        .boss-badge { background: #f39c12; color: white; padding: 5px 16px; border-radius: 40px; font-weight: bold; font-size: 0.8rem; }
+        .file-badge { background: #e0e7ff; padding: 5px 12px; border-radius: 40px; font-size: 0.7rem; white-space: nowrap; overflow-x: auto; max-width: 200px; }
         /* Joker */
-        .joker-row { display: flex; gap: 15px; justify-content: center; margin-bottom: 30px; }
+        .joker-row { display: flex; gap: 12px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap; }
         .joker-box {
-            background: white; border-radius: 60px; padding: 12px 28px;
-            font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            cursor: pointer; transition: 0.1s; border: 2px solid #cbd5e1;
+            background: white; border-radius: 60px; padding: 10px 20px;
+            font-weight: bold; font-size: 0.9rem; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            cursor: pointer; transition: 0.1s; border: 2px solid #cbd5e1; text-align: center;
         }
         .joker-box.active { background: #ffd966; border-color: #b45309; transform: scale(0.96); }
         .joker-box.used { opacity: 0.4; filter: grayscale(0.3); pointer-events: none; }
-        /* Kategorien-Grid – große Karten */
+        /* Kategorien-Grid – für mobile optimiert */
         .categories-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 28px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
             margin-bottom: 40px;
         }
         .category-card {
-            border-radius: 32px;
-            padding: 24px 20px;
+            border-radius: 28px;
+            padding: 20px 16px;
             transition: 0.2s;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
             cursor: pointer;
             border: 2px solid rgba(0,0,0,0.08);
         }
         .category-card.disabled { opacity: 0.5; filter: grayscale(0.2); cursor: not-allowed; }
-        .category-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: baseline; }
-        .category-count { background: rgba(0,0,0,0.1); padding: 4px 12px; border-radius: 40px; font-size: 0.9rem; }
-        .category-meta { margin: 15px 0; font-size: 0.95rem; opacity: 0.9; }
+        .category-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+        .category-count { background: rgba(0,0,0,0.1); padding: 3px 10px; border-radius: 40px; font-size: 0.8rem; }
+        .category-meta { margin: 12px 0; font-size: 0.85rem; opacity: 0.9; }
         .btn-waehlen {
             background: rgba(0,0,0,0.2);
             border: none;
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             border-radius: 50px;
             font-weight: bold;
-            font-size: 1rem;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: 0.2s;
             backdrop-filter: blur(2px);
         }
-        .btn-waehlen:hover { background: rgba(0,0,0,0.3); transform: translateY(-2px); }
+        .btn-waehlen:active { transform: scale(0.97); }
         /* Fußzeile */
-        .footer-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
-        .btn-footer { background: white; border: none; padding: 12px 28px; border-radius: 50px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; }
+        .footer-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+        .btn-footer { background: white; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 0.8rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; }
         /* Modals */
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-card { background: white; max-width: 500px; width: 90%; border-radius: 48px; padding: 32px; text-align: center; }
-        input, .double-input input { border: 2px solid #cbd5e1; border-radius: 60px; padding: 14px 20px; width: 100%; margin: 10px 0; font-size: 1rem; text-align: center; }
-        .double-input { display: flex; gap: 12px; }
-        .btn-primary { background: #6c5ce7; color: white; border: none; padding: 14px; border-radius: 60px; font-weight: bold; width: 100%; margin-top: 12px; cursor: pointer; }
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; padding: 16px; }
+        .modal-card { background: white; max-width: 500px; width: 100%; border-radius: 48px; padding: 28px 20px; text-align: center; }
+        input, .double-input input { border: 2px solid #cbd5e1; border-radius: 60px; padding: 12px 16px; width: 100%; margin: 8px 0; font-size: 1rem; text-align: center; }
+        .double-input { display: flex; gap: 12px; flex-wrap: wrap; }
+        .btn-primary { background: #6c5ce7; color: white; border: none; padding: 12px; border-radius: 60px; font-weight: bold; width: 100%; margin-top: 12px; cursor: pointer; font-size: 1rem; }
         .ranking-entry { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; }
-        @keyframes shake { 0%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} 100%{transform:translateX(0)} }
+        /* Boss-Animation */
+        @keyframes bossPulse {
+            0% { transform: scale(1); border-color: #ff4757; box-shadow: 0 0 0 0 rgba(255,71,87,0.7); }
+            50% { transform: scale(1.02); border-color: #ff0000; box-shadow: 0 0 0 15px rgba(255,71,87,0); }
+            100% { transform: scale(1); border-color: #ff4757; box-shadow: 0 0 0 0 rgba(255,71,87,0); }
+        }
+        .boss-modal {
+            animation: bossPulse 0.8s ease-in-out;
+            border: 4px solid #ff4757;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+            100% { transform: translateX(0); }
+        }
         .shake { animation: shake 0.3s ease; }
-        @keyframes celebrate { 0%{transform:scale(1)} 50%{transform:scale(1.02); background:#d4f5e0;} 100%{transform:scale(1)} }
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); background: #d4f5e0; }
+            100% { transform: scale(1); }
+        }
         .winner { animation: celebrate 0.5s ease; }
+        /* Mobile Anpassungen */
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .category-title { font-size: 1.2rem; }
+            .joker-box { padding: 8px 16px; font-size: 0.8rem; }
+            .header-stats { padding: 12px; }
+            .player-info span { font-size: 0.75rem; }
+        }
     </style>
 </head>
 <body>
@@ -125,10 +153,10 @@
 </div>
 
 <!-- Modals -->
-<div id="modal-quiz" class="overlay"><div class="modal-card"><div id="m-cat-ui" style="font-size:1.3rem; font-weight:bold;"></div><div id="m-q" style="margin:20px 0; font-size:1.2rem;"></div><div id="input-container"><input type="number" id="ans-input" placeholder="Deine Antwort"></div><button class="btn-primary" id="btn-submit" onclick="checkAnswer()">PRÜFEN</button><div id="m-feedback" style="margin-top:15px;"></div><button id="btn-next" style="display:none;" class="btn-primary" onclick="nextRound()">NÄCHSTE FRAGE</button></div></div>
+<div id="modal-quiz" class="overlay"><div class="modal-card" id="quiz-modal-card"><div id="m-cat-ui" style="font-size:1.3rem; font-weight:bold;"></div><div id="m-q" style="margin:20px 0; font-size:1.2rem;"></div><div id="input-container"><input type="number" id="ans-input" placeholder="Deine Antwort"></div><button class="btn-primary" id="btn-submit" onclick="checkAnswer()">PRÜFEN</button><div id="m-feedback" style="margin-top:15px;"></div><button id="btn-next" style="display:none;" class="btn-primary" onclick="nextRound()">NÄCHSTE FRAGE</button></div></div>
 <div id="modal-ranking" class="overlay"><div class="modal-card"><h2>🏆 BESTENLISTE</h2><div id="ranking-list"></div><button class="btn-primary" onclick="toggleModal('modal-ranking', false)">SCHLIESSEN</button></div></div>
 <div id="modal-setup" class="overlay"><div class="modal-card"><h2>📂 FRAGEN IMPORTIEREN</h2><input type="file" id="excel-file" accept=".xlsx, .xls"><button class="btn-primary" onclick="processExcel()">HOCHLADEN & STARTEN</button></div></div>
-<div id="modal-guide" class="overlay"><div class="modal-card"><h2>📜 SPIELANLEITUNG</h2><div style="text-align:left;"><ul><li><strong>20 Fragen</strong> – alle 4 Runden Boss</li><li>Jede Kategorie max. 2-mal wählbar</li><li>Differenz = Schaden, Volltreffer = +5 HP</li><li><strong>Joker (einmalig)</strong>:<br>🛡️ Schild: max. 10 Schaden<br>⚔️ Schwert: zwei Antworten, bessere zählt<br>🧪 Lebenstrank: +15 HP bei Volltreffer</li></ul></div><button class="btn-primary" onclick="toggleModal('modal-guide', false)">VERSTANDEN</button></div></div>
+<div id="modal-guide" class="overlay"><div class="modal-card"><h2>📜 SPIELANLEITUNG</h2><div style="text-align:left;"><ul><li><strong>20 Fragen</strong> – alle 4 Runden erscheint automatisch ein <strong>BOSS</strong> (mit Animation)!</li><li>Jede Kategorie max. 2-mal wählbar</li><li>Differenz = Schaden, Volltreffer = +5 HP</li><li><strong>Joker (einmalig)</strong>:<br>🛡️ Schild: max. 10 Schaden<br>⚔️ Schwert: zwei Antworten, bessere zählt<br>🧪 Lebenstrank: +15 HP bei Volltreffer</li></ul></div><button class="btn-primary" onclick="toggleModal('modal-guide', false)">VERSTANDEN</button></div></div>
 
 <script>
     const SUPABASE_URL = 'https://eaxuqsiwrfqshqkwtnlz.supabase.co';
@@ -138,31 +166,38 @@
     let questions = JSON.parse(localStorage.getItem('p0_v3')) || [];
     let hp = 100, score = 0, qCounter = 0, currentIdx = null, activeJoker = null, playerName = "";
     let usedJokers = { Schild: false, Schwert: false, Lebenstrank: false }, categoryUsage = {};
-    let currentFileName = localStorage.getItem('quiz_filename') || "Keine Datei";
+    let currentFileName = localStorage.getItem('quiz_filename') || null;
     let questionCount = questions.length;
 
     function updateFileIndicator() {
-        let text = currentFileName;
+        let text = "";
+        if(currentFileName && currentFileName !== "null") {
+            text = currentFileName;
+        } else if(questionCount > 0) {
+            text = "Geladene Fragen";
+        } else {
+            text = "Keine Datei";
+        }
         if(questionCount > 0) text += ` (${questionCount} Fragen)`;
         document.getElementById('file-indicator').innerText = `📄 ${text}`;
     }
 
-    // Farben für Kategorien (bunt, kontrastreich, farbenblindfreundlich)
+    // Farben für Kategorien (bunt, kontrastreich)
     function getCategoryColor(cat) {
         const c = cat.toLowerCase();
-        if(c.includes("flora") || c.includes("fauna") || c.includes("natur") || c.includes("tier")) return "#2ecc71"; // grün
-        if(c.includes("geo") || c.includes("erde") || c.includes("welt")) return "#3498db"; // blau
-        if(c.includes("geschicht") || c.includes("histor")) return "#e67e22"; // orange
-        if(c.includes("technik") || c.includes("physik") || c.includes("wissen") || c.includes("computer")) return "#9b59b6"; // lila
-        if(c.includes("kunst") || c.includes("architektur")) return "#e84393"; // pink
-        if(c.includes("film") || c.includes("kino") || c.includes("tv")) return "#f1c40f"; // gold
-        if(c.includes("musik") || c.includes("bühne")) return "#1abc9c"; // türkis
-        if(c.includes("sprache") || c.includes("literatur")) return "#f39c12"; // orange-gelb
-        if(c.includes("politik") || c.includes("handel")) return "#95a5a6"; // grau
-        if(c.includes("religion") || c.includes("philosophie")) return "#d35400"; // dunkelorange
-        if(c.includes("sport")) return "#e74c3c"; // rot
-        if(c.includes("medizin") || c.includes("wissenschaft")) return "#16a085"; // dunkelgrün
-        return "#6c5ce7"; // standard lila
+        if(c.includes("flora") || c.includes("fauna") || c.includes("natur") || c.includes("tier")) return "#2ecc71";
+        if(c.includes("geo") || c.includes("erde") || c.includes("welt")) return "#3498db";
+        if(c.includes("geschicht") || c.includes("histor")) return "#e67e22";
+        if(c.includes("technik") || c.includes("physik") || c.includes("wissen") || c.includes("computer")) return "#9b59b6";
+        if(c.includes("kunst") || c.includes("architektur")) return "#e84393";
+        if(c.includes("film") || c.includes("kino") || c.includes("tv")) return "#f1c40f";
+        if(c.includes("musik") || c.includes("bühne")) return "#1abc9c";
+        if(c.includes("sprache") || c.includes("literatur")) return "#f39c12";
+        if(c.includes("politik") || c.includes("handel")) return "#95a5a6";
+        if(c.includes("religion") || c.includes("philosophie")) return "#d35400";
+        if(c.includes("sport")) return "#e74c3c";
+        if(c.includes("medizin") || c.includes("wissenschaft")) return "#16a085";
+        return "#6c5ce7";
     }
 
     function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
@@ -204,39 +239,44 @@
         reader.readAsArrayBuffer(file);
     }
 
+    // Prüft, ob die nächste Runde eine Boss-Runde ist und startet sie automatisch
+    function checkAndStartBossRound() {
+        const nextRound = qCounter + 1;
+        const isBossRound = (nextRound % 4 === 0) || (nextRound === 20);
+        if(isBossRound && qCounter < 20) {
+            startBossFight(nextRound);
+            return true;
+        }
+        return false;
+    }
+
+    function startBossFight(round) {
+        const bossList = questions.filter(q => q.isBoss && !q.used);
+        if(bossList.length === 0) {
+            // Fallback: normale Frage, falls keine Boss-Frage existiert
+            const normal = questions.find(q => !q.used);
+            if(normal) currentIdx = questions.indexOf(normal);
+            else return;
+        } else {
+            const randomBoss = bossList[Math.floor(Math.random() * bossList.length)];
+            currentIdx = questions.indexOf(randomBoss);
+        }
+        // Animation und Titel setzen
+        const modalCard = document.getElementById('quiz-modal-card');
+        modalCard.classList.add('boss-modal');
+        setTimeout(() => modalCard.classList.remove('boss-modal'), 1000);
+        document.getElementById('m-cat-ui').innerHTML = `🔥 BOSS-KAMPF (Runde ${round}) 🔥`;
+        openQuestion(questions[currentIdx]);
+    }
+
     function renderCategories() {
+        // Zuerst prüfen, ob Boss-Runde ansteht
+        if(checkAndStartBossRound()) return;
+        
         const container = document.getElementById('categories-container');
         container.innerHTML = "";
-        const nextRound = qCounter + 1;
-
-        // Boss-Karte
-        if ((nextRound % 4 === 0) || (nextRound === 20)) {
-            const bossCard = document.createElement('div');
-            bossCard.className = "category-card";
-            bossCard.style.background = "#ffecb3";
-            bossCard.style.border = "3px solid #f39c12";
-            bossCard.innerHTML = `
-                <div class="category-title">🔥 BOSS-KAMPF 🔥 <span class="category-count">!</span></div>
-                <div class="category-meta">Runde ${nextRound} – Gefährlicher Gegner</div>
-                <button class="btn-waehlen" style="background:#f39c12; color:#000;">⚔️ FORDERN ⚔️</button>
-            `;
-            bossCard.querySelector('button').onclick = () => {
-                const bossList = questions.filter(q => q.isBoss && !q.used);
-                if(bossList.length === 0) {
-                    alert("Keine Boss-Fragen mehr! Normale Frage wird geladen.");
-                    const normal = questions.find(q => !q.used);
-                    if(normal) currentIdx = questions.indexOf(normal);
-                    else return;
-                } else {
-                    const randomBoss = bossList[Math.floor(Math.random() * bossList.length)];
-                    currentIdx = questions.indexOf(randomBoss);
-                }
-                openQuestion(questions[currentIdx]);
-            };
-            container.appendChild(bossCard);
-        }
-
-        // Normale Kategorien mit individuellen Farben
+        
+        // Normale Kategorien anzeigen
         const cats = [...new Set(questions.filter(q => !q.isBoss).map(q => q.cat))];
         cats.forEach(cat => {
             const usedCount = categoryUsage[cat] || 0;
@@ -246,7 +286,6 @@
             card.className = "category-card" + (disabled ? " disabled" : "");
             card.style.background = bgColor;
             card.style.color = "#1e2a3e";
-            // Kontrast verbessern: dunkle Schrift auf hellen Farben, bei dunklen Farben helle Schrift
             if(bgColor === "#2ecc71" || bgColor === "#3498db" || bgColor === "#f1c40f" || bgColor === "#1abc9c" || bgColor === "#95a5a6") card.style.color = "#1e2a3e";
             else card.style.color = "white";
             card.innerHTML = `
@@ -282,7 +321,15 @@
     function useJoker(type) { if(usedJokers[type] || activeJoker) return; activeJoker = type; document.querySelectorAll('.joker-box').forEach(b=>b.classList.remove('active')); document.getElementById('j-'+type).classList.add('active'); }
 
     function openQuestion(q) {
-        document.getElementById('m-cat-ui').innerText = q.cat;
+        // Wenn es eine Boss-Frage ist, setze speziellen Titel
+        const isBoss = q.isBoss;
+        if(isBoss) {
+            document.getElementById('m-cat-ui').innerHTML = `🔥 BOSS-KAMPF 🔥`;
+            document.getElementById('m-cat-ui').style.color = "#ff4757";
+        } else {
+            document.getElementById('m-cat-ui').innerHTML = q.cat;
+            document.getElementById('m-cat-ui').style.color = "#6c5ce7";
+        }
         document.getElementById('m-q').innerText = q.q;
         document.getElementById('m-feedback').innerHTML = "";
         document.getElementById('btn-next').style.display = 'none';
@@ -334,7 +381,7 @@
     async function nextRound() {
         toggleModal('modal-quiz', false);
         if(hp<=0) { alert(`💀 GAME OVER! ${score} Punkte.`); if(score>0) await supabaseClient.from('highscores').insert([{name:playerName, score}]); location.reload(); }
-        else if(qCounter>=20) { alert(`🏆 SIEG! ${score} Punkte.`); if(score>0) await supabaseClient.from('highscores').insert([{name:playerName, score}]); location.reload(); }
+        else if(qCounter>=20) { alert(`🏆 ENDBOSS BESIEGT! Du hast das Spiel gemeistert! ${score} Punkte.`); if(score>0) await supabaseClient.from('highscores').insert([{name:playerName, score}]); location.reload(); }
         else renderCategories();
     }
 </script>
