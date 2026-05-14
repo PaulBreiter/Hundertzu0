@@ -15,7 +15,6 @@
             color: #1e2a3e;
         }
         .app-container { max-width: 1300px; margin: 0 auto; }
-        /* Kopf */
         .header-stats {
             background: white;
             border-radius: 32px;
@@ -36,7 +35,6 @@
         #hp-bar-fill { height: 100%; background: #2ecc71; transition: 0.3s; }
         .boss-badge { background: #f39c12; color: white; padding: 5px 16px; border-radius: 40px; font-weight: bold; font-size: 0.8rem; }
         .file-badge { background: #e0e7ff; padding: 5px 12px; border-radius: 40px; font-size: 0.7rem; white-space: nowrap; overflow-x: auto; max-width: 220px; }
-        /* Joker */
         .joker-row { display: flex; gap: 12px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap; }
         .joker-box {
             background: white; border-radius: 60px; padding: 10px 20px;
@@ -45,7 +43,6 @@
         }
         .joker-box.active { background: #ffd966; border-color: #b45309; transform: scale(0.96); }
         .joker-box.used { opacity: 0.4; filter: grayscale(0.3); pointer-events: none; }
-        /* Kategorien-Grid – einheitliche Kartenhöhe */
         .categories-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -82,17 +79,18 @@
             margin-top: auto;
         }
         .btn-waehlen:active { transform: scale(0.97); }
-        /* Fußzeile */
         .footer-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
         .btn-footer { background: white; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 0.8rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; }
-        /* Modals */
         .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; padding: 16px; }
-        .modal-card { background: white; max-width: 500px; width: 100%; border-radius: 48px; padding: 28px 20px; text-align: center; }
+        .modal-card { background: white; max-width: 500px; width: 100%; border-radius: 48px; padding: 28px 20px; text-align: center; max-height: 85vh; overflow-y: auto; }
         input, .double-input input { border: 2px solid #cbd5e1; border-radius: 60px; padding: 12px 16px; width: 100%; margin: 8px 0; font-size: 1rem; text-align: center; }
         .double-input { display: flex; gap: 12px; flex-wrap: wrap; }
         .btn-primary { background: #6c5ce7; color: white; border: none; padding: 12px; border-radius: 60px; font-weight: bold; width: 100%; margin-top: 12px; cursor: pointer; font-size: 1rem; }
         .ranking-entry { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; }
-        /* Boss-Animation */
+        .guide-text { text-align: left; line-height: 1.5; font-size: 1rem; margin: 15px 0; }
+        .guide-text p { margin-bottom: 12px; }
+        .guide-text ul { margin-left: 20px; margin-bottom: 12px; }
+        .guide-text li { margin-bottom: 8px; }
         @keyframes bossPulse {
             0% { transform: scale(1); border-color: #ff4757; box-shadow: 0 0 0 0 rgba(255,71,87,0.7); }
             50% { transform: scale(1.02); border-color: #ff0000; box-shadow: 0 0 0 15px rgba(255,71,87,0); }
@@ -103,13 +101,13 @@
         .shake { animation: shake 0.3s ease; }
         @keyframes celebrate { 0%{transform:scale(1)} 50%{transform:scale(1.02); background:#d4f5e0;} 100%{transform:scale(1)} }
         .winner { animation: celebrate 0.5s ease; }
-        /* Mobile */
         @media (max-width: 600px) {
             body { padding: 12px; }
             .category-title { font-size: 1.2rem; }
             .joker-box { padding: 8px 16px; font-size: 0.8rem; }
             .header-stats { padding: 12px; }
             .player-info span { font-size: 0.75rem; }
+            .guide-text { font-size: 0.9rem; }
         }
     </style>
 </head>
@@ -149,7 +147,21 @@
 <div id="modal-quiz" class="overlay"><div class="modal-card" id="quiz-modal-card"><div id="m-cat-ui" style="font-size:1.3rem; font-weight:bold;"></div><div id="m-q" style="margin:20px 0; font-size:1.2rem;"></div><div id="input-container"><input type="number" id="ans-input" placeholder="Deine Antwort"></div><button class="btn-primary" id="btn-submit" onclick="checkAnswer()">PRÜFEN</button><div id="m-feedback" style="margin-top:15px;"></div><button id="btn-next" style="display:none;" class="btn-primary" onclick="nextRound()">NÄCHSTE FRAGE</button></div></div>
 <div id="modal-ranking" class="overlay"><div class="modal-card"><h2>🏆 BESTENLISTE</h2><div id="ranking-list"></div><button class="btn-primary" onclick="toggleModal('modal-ranking', false)">SCHLIESSEN</button></div></div>
 <div id="modal-setup" class="overlay"><div class="modal-card"><h2>📂 FRAGEN IMPORTIEREN</h2><input type="file" id="excel-file" accept=".xlsx, .xls"><button class="btn-primary" onclick="processExcel()">HOCHLADEN & STARTEN</button></div></div>
-<div id="modal-guide" class="overlay"><div class="modal-card"><h2>📜 SPIELANLEITUNG</h2><div style="text-align:left;"><ul><li><strong>20 Fragen</strong> – alle 4 Runden erscheint automatisch ein <strong>BOSS</strong> (mit Animation)!</li><li>Jede Kategorie max. 2-mal wählbar</li><li>Differenz = Schaden, Volltreffer = +5 HP</li><li><strong>Joker (einmalig)</strong>:<br>🛡️ Schild: max. 10 Schaden<br>⚔️ Schwert: zwei Antworten, bessere zählt<br>🧪 Lebenstrank: +15 HP bei Volltreffer</li></ul></div><button class="btn-primary" onclick="toggleModal('modal-guide', false)">VERSTANDEN</button></div></div>
+<div id="modal-guide" class="overlay"><div class="modal-card"><h2>📜 SPIELANLEITUNG</h2><div class="guide-text">
+    <p><strong>Willkommen zum Comic-Quiz!</strong> Stelle dein Wissen unter Beweis und überlebe 20 herausfordernde Runden.</p>
+    <p><strong>📌 Spielablauf:</strong><br>
+    - Du siehst alle verfügbaren Kategorien. Jede Kategorie darf maximal <strong>2-mal</strong> ausgewählt werden.<br>
+    - Wähle eine Kategorie, dann erscheint eine Schätzfrage. Gib deine Antwort als Zahl ein.<br>
+    - Die <strong>Differenz</strong> zwischen deiner Schätzung und der richtigen Antwort wird von deinen <strong>Lebenspunkten (❤️)</strong> abgezogen.<br>
+    - Bei einem <strong>exakten Treffer</strong> (Differenz 0) erhältst du 5 Lebenspunkte zurück und 250 Zusatzpunkte!<br>
+    - Nach jeweils <strong>4 Runden</strong> erscheint automatisch ein <strong>Boss-Kampf</strong> – hier warten besonders knifflige Fragen. Die 20. Runde ist der Endboss!</p>
+    <p><strong>🃏 Joker (jeweils einmal pro Spiel einsetzbar):</strong><br>
+    - 🛡️ <strong>Schild:</strong> Der erlittene Schaden wird auf maximal 10 begrenzt.<br>
+    - ⚔️ <strong>Schwert:</strong> Du darfst zwei Antworten abgeben – die bessere (näher dran) wird gewertet.<br>
+    - 🧪 <strong>Lebenstrank:</strong> Bei einem perfekten Treffer heilst du 15 ❤️ statt nur 5.</p>
+    <p><strong>💡 Tipp:</strong> Aktiviere einen Joker <em>bevor</em> du eine Kategorie auswählst – der Joker gilt dann für die nächste Frage.</p>
+    <p><strong>🏆 Highscore:</strong> Deine Punkte werden am Ende ins Online-Ranking übernommen. Schaffst du es an die Spitze?</p>
+</div><button class="btn-primary" onclick="toggleModal('modal-guide', false)">VERSTANDEN</button></div></div>
 
 <script>
     const SUPABASE_URL = 'https://eaxuqsiwrfqshqkwtnlz.supabase.co';
@@ -262,7 +274,10 @@
         if(checkAndStartBossRound()) return;
         const container = document.getElementById('categories-container');
         container.innerHTML = "";
-        const cats = [...new Set(questions.filter(q => !q.isBoss).map(q => q.cat))];
+        let cats = [...new Set(questions.filter(q => !q.isBoss).map(q => q.cat))];
+        // Kategorie "Ultimative Quest" ausblenden (Groß-/Kleinschreibung egal)
+        cats = cats.filter(cat => cat.toLowerCase() !== "ultimative quest");
+        
         cats.forEach(cat => {
             const usedCount = categoryUsage[cat] || 0;
             const disabled = usedCount >= 2;
