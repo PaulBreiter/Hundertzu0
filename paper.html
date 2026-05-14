@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>PAPIER QUIZ | Keller-Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; }
         body {
@@ -75,11 +76,12 @@
         .btn-primary { background: #8b5a2b; color: white; border: none; padding: 12px; border-radius: 60px; font-weight: bold; width: 100%; margin-top: 12px; cursor: pointer; font-size: 1rem; }
         .richtige-antwort { background: #e8dccc; padding: 12px; border-radius: 28px; margin-top: 15px; font-weight: bold; font-size: 1.2rem; display: none; }
         @keyframes bossPulse {
-            0% { transform: scale(1); border-color: #ff4757; }
-            50% { transform: scale(1.02); border-color: #b85c1a; }
-            100% { transform: scale(1); border-color: #ff4757; }
+            0% { transform: scale(1); border-color: #ff4757; box-shadow: 0 0 0 0 rgba(255,71,87,0.7); }
+            50% { transform: scale(1.02); border-color: #b85c1a; box-shadow: 0 0 0 15px rgba(255,71,87,0); }
+            100% { transform: scale(1); border-color: #ff4757; box-shadow: 0 0 0 0 rgba(255,71,87,0); }
         }
         .boss-modal { animation: bossPulse 0.8s ease-in-out; border: 4px solid #b85c1a; }
+        .error-message { background: #ffdddd; border-left: 6px solid #b85c1a; padding: 12px; margin-bottom: 20px; border-radius: 12px; }
         @media (max-width: 600px) {
             body { padding: 12px; }
             .category-title { font-size: 1.2rem; }
@@ -99,9 +101,11 @@
     </div>
 
     <div id="categories-container" class="categories-grid"></div>
+    <div id="error-placeholder"></div>
 
     <div class="footer-buttons">
         <button class="btn-footer" onclick="window.location.href='index.html'">🏠 STARTSEITE</button>
+        <button class="btn-footer" onclick="showRanking()">🏆 BESTENLISTE</button>
         <button class="btn-footer" onclick="toggleModal('modal-guide', true)">📖 ANLEITUNG (Analog)</button>
         <button class="btn-footer" onclick="toggleModal('modal-setup', true)">📂 EXCEL LADEN</button>
     </div>
@@ -116,128 +120,116 @@
     <button id="btn-next" style="display:none;" class="btn-primary" onclick="nextRound()">➡️ NÄCHSTE FRAGE</button>
 </div></div>
 
-<div id="modal-setup" class="overlay"><div class="modal-card">
-    <h2>📂 FRAGEN IMPORTIEREN</h2>
-    <input type="file" id="excel-file" accept=".xlsx, .xls">
-    <button class="btn-primary" onclick="processExcel()">HOCHLADEN & STARTEN</button>
-</div></div>
-
-<div id="modal-guide" class="overlay"><div class="modal-card">
-    <h2>📜 SPIELANLEITUNG (Analog)</h2>
-    <div style="text-align:left; line-height:1.5;">
-        <p><strong>Willkommen im Keller – Stift & Papier Modus!</strong></p>
-        <p><strong>Vorbereitung:</strong> Moderator bedient Bildschirm, Spieler haben Stift und Papier. Lebenspunkte, Punkte und Joker werden händisch notiert.</p>
-        <p><strong>Ablauf:</strong> Kategorie wählen → Frage erscheint → Spieler notieren Schätzung → Moderator klickt "LÖSUNG ANZEIGEN" → Spieler berechnen Differenz und ziehen von HP ab (bei 0 Differenz +5 HP). → Nächste Frage.</p>
-        <p><strong>👾 Boss:</strong> Alle 4 Runden erscheint automatisch ein Boss (Runde 4,8,12,16,20).</p>
-        <p><strong>🃏 Joker (einmalig, analog):</strong> Schild (max 10 Schaden), Schwert (2 Antworten, bessere zählt), Lebenstrank (+15 HP bei Volltreffer).</p>
-    </div>
-    <button class="btn-primary" onclick="toggleModal('modal-guide', false)">VERSTANDEN</button>
-</div></div>
+<div id="modal-ranking" class="overlay"><div class="modal-card"><h2>🏆 BESTENLISTE (Online)</h2><div id="ranking-list"></div><button class="btn-primary" onclick="toggleModal('modal-ranking', false)">SCHLIESSEN</button></div></div>
+<div id="modal-setup" class="overlay"><div class="modal-card"><h2>📂 FRAGEN IMPORTIEREN</h2><input type="file" id="excel-file" accept=".xlsx, .xls"><button class="btn-primary" onclick="processExcel()">HOCHLADEN & STARTEN</button></div></div>
+<div id="modal-guide" class="overlay"><div class="modal-card"><h2>📜 SPIELANLEITUNG (Analog)</h2><div class="guide-text" style="text-align:left; line-height:1.5;">
+    <p><strong>Willkommen im Keller – Stift & Papier Modus!</strong></p>
+    <p><strong>Spielvorbereitung:</strong><br>
+    - Ein*e Moderator*in bedient den Bildschirm.<br>
+    - Alle Spieler*innen oder Teams haben Stift und Papier bereit.<br>
+    - Lebenspunkte (❤️), Punkte und Joker werden <strong>händisch notiert</strong> – keine automatische Berechnung.</p>
+    <p><strong>Ablauf:</strong><br>
+    1. Excel-Datei laden (Button unten).<br>
+    2. Kategorien erscheinen. Jede Kategorie kann maximal <strong>2-mal</strong> gewählt werden (Zähler wird angezeigt).<br>
+    3. Spieler entscheiden Kategorie → Moderator klickt auf „WÄHLEN“.<br>
+    4. Frage erscheint. Spieler notieren ihre Schätzung auf Papier.<br>
+    5. Moderator klickt auf <strong>„LÖSUNG ANZEIGEN“</strong>.<br>
+    6. Jeder berechnet selbst die Differenz und zieht sie von seinen Lebenspunkten ab.<br>
+    7. Bei exaktem Treffer (Differenz 0) heilt sich der Spieler selbst um 5 HP (oder mehr mit Joker).<br>
+    8. Moderator klickt auf <strong>„NÄCHSTE FRAGE“</strong>.</p>
+    <p><strong>👾 Boss-Runden:</strong><br>
+    - Automatisch alle 4 Runden (4, 8, 12, 16, 20) – keine eigene Boss-Kategorie!<br>
+    - Der Endboss wartet in Runde 20.</p>
+    <p><strong>🃏 Joker (analog verwalten):</strong><br>
+    - Jeder Joker einmal pro Spiel.<br>
+    - 🛡️ Schild: Schaden max. 10<br>
+    - ⚔️ Schwert: zwei Antworten, bessere zählt<br>
+    - 🧪 Lebenstrank: +15 HP bei Volltreffer</p>
+</div><button class="btn-primary" onclick="toggleModal('modal-guide', false)">VERSTANDEN</button></div></div>
 
 <script>
-    // KEINE SUPABASE im Keller-Modus nötig, aber wir behalten die Struktur
-    let questions = [];
-    let qCounter = 0, currentIdx = null, playerName = "";
-    let categoryUsage = {};
+    // Supabase für Bestenliste (optional)
+    const SUPABASE_URL = 'https://eaxuqsiwrfqshqkwtnlz.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_PViFkgap3gvsxBgG2NSAjA_Oc0eASzI';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Globale Variablen
+    let questions = [];           // wird aus localStorage geladen
+    let qCounter = 0;            // Anzahl bereits gespielter Fragen (0-20)
+    let currentIdx = null;       // Index der aktuellen Frage in questions[]
+    let playerName = "";
+    let categoryUsage = {};       // zählt wie oft jede Kategorie gewählt wurde
     let currentFileName = null;
+    let questionCount = 0;
     let currentQuestionObj = null;
+
+    // Hilfsfunktionen
+    function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
 
     function updateFileIndicator() {
         let text = "";
-        if(currentFileName && currentFileName !== "null") {
+        if (currentFileName && currentFileName !== "null") {
             text = currentFileName;
-        } else if(questions.length > 0) {
+        } else if (questionCount > 0) {
             text = "Geladene Fragen";
         } else {
             text = "Keine Datei";
         }
-        if(questions.length > 0) text += ` (${questions.length} Fragen)`;
+        if (questionCount > 0) text += ` (${questionCount} Fragen)`;
         document.getElementById('file-indicator').innerText = `📄 ${text}`;
     }
 
     function getCategoryColor(cat) {
         const c = cat.toLowerCase();
-        if(c.includes("flora") || c.includes("fauna")) return "#b2d8a8";
-        if(c.includes("geo") || c.includes("erde")) return "#a8d8ff";
-        if(c.includes("geschicht")) return "#ffcc99";
-        if(c.includes("technik")) return "#c9b3ff";
-        if(c.includes("kunst")) return "#ffb3d9";
+        if (c.includes("flora") || c.includes("fauna")) return "#b2d8a8";
+        if (c.includes("geo") || c.includes("erde")) return "#a8d8ff";
+        if (c.includes("geschicht")) return "#ffcc99";
+        if (c.includes("technik")) return "#c9b3ff";
+        if (c.includes("kunst")) return "#ffb3d9";
         return "#f9e0a0";
     }
 
-    function toggleModal(id, show) { 
-        document.getElementById(id).style.display = show ? 'flex' : 'none'; 
+    async function showRanking() {
+        toggleModal('modal-ranking', true);
+        const listDiv = document.getElementById('ranking-list');
+        listDiv.innerHTML = "Lade...";
+        const { data, error } = await supabaseClient.from('highscores').select('*').order('score', { ascending: false }).limit(5);
+        if (error) listDiv.innerHTML = "Fehler beim Laden";
+        else listDiv.innerHTML = data.map((s,i) => `<div style="display:flex; justify-content:space-between; padding:12px;"><span>${i+1}. ${s.name}</span><b>${s.score} Pkt</b></div>`).join('');
     }
 
-    window.onload = () => {
-        playerName = localStorage.getItem('quiz_username');
-        if(!playerName) { 
-            window.location.href = 'index.html'; 
-            return; 
-        }
-        // Versuche gespeicherte Fragen zu laden
-        const saved = localStorage.getItem('p0_v3');
-        if(saved) {
-            try {
-                questions = JSON.parse(saved);
-                currentFileName = localStorage.getItem('quiz_filename');
-                if(questions.length > 0) {
-                    updateFileIndicator();
-                    renderCategories();
-                } else {
-                    toggleModal('modal-setup', true);
-                }
-            } catch(e) {
-                toggleModal('modal-setup', true);
-            }
-        } else {
-            toggleModal('modal-setup', true);
-        }
-    };
-
+    // Excel laden und speichern
     function processExcel() {
         const file = document.getElementById('excel-file').files[0];
-        if(!file) return alert("Bitte Datei auswählen");
+        if (!file) return alert("Bitte Datei auswählen");
         const reader = new FileReader();
         reader.onload = (e) => {
             const data = new Uint8Array(e.target.result);
             const wb = XLSX.read(data, {type: 'array'});
             const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-            if(!json.length) {
-                alert("Die Datei enthält keine Daten!");
-                return;
-            }
-            questions = json.map(r => ({ 
-                cat: r.Kategorie || "Allgemein", 
-                q: r.Frage, 
-                a: parseFloat(r.Antwort), 
-                isBoss: (r.Boss && r.Boss.toString().toLowerCase() === 'ja'), 
-                used: false 
+            // Fragen parsen: Spalten: Kategorie, Frage, Antwort, Boss (Groß-/Kleinschreibung tolerant)
+            questions = json.map(r => ({
+                cat: r.Kategorie || r.Kategorie || "Allgemein",
+                q: r.Frage || r.Frage,
+                a: parseInt(r.Antwort || r.Antwort),
+                isBoss: (r.Boss && r.Boss.toString().toLowerCase() === 'ja') ? true : false,
+                used: false
             }));
-            // Filtere ungültige Einträge
-            questions = questions.filter(q => q.q && !isNaN(q.a));
-            if(questions.length === 0) {
-                alert("Keine gültigen Fragen gefunden. Bitte prüfe die Spaltennamen: Kategorie, Frage, Antwort, Boss (Ja/Nein)");
-                return;
-            }
-            localStorage.setItem('p0_v3', JSON.stringify(questions));
-            localStorage.setItem('quiz_filename', file.name);
-            currentFileName = file.name;
-            updateFileIndicator();
-            // Setze Spielstand zurück
-            qCounter = 0;
-            categoryUsage = {};
-            questions.forEach(q => q.used = false);
-            renderCategories();
-            toggleModal('modal-setup', false);
+            // Filtern: Nur gültige Fragen (mit Antwort)
+            questions = questions.filter(q => !isNaN(q.a) && q.q);
+            localStorage.setItem('p0_v3_paper', JSON.stringify(questions));
+            localStorage.setItem('quiz_filename_paper', file.name);
+            // Seite neuladen, um die Daten zu übernehmen
+            location.reload();
         };
         reader.readAsArrayBuffer(file);
     }
 
+    // Prüfen, ob die nächste Runde eine Boss-Runde ist (alle 4, inkl. 20)
     function checkAndStartBossRound() {
         const nextRound = qCounter + 1;
         const isBossRound = (nextRound % 4 === 0) || (nextRound === 20);
-        if(isBossRound && qCounter < 20) {
+        if (isBossRound && qCounter < 20) {
             startBossFight(nextRound);
             return true;
         }
@@ -245,69 +237,67 @@
     }
 
     function startBossFight(round) {
+        // Boss-Fragen aus dem Pool (isBoss === true und noch nicht verwendet)
         const bossList = questions.filter(q => q.isBoss && !q.used);
-        let selected;
-        if(bossList.length === 0) {
+        if (bossList.length === 0) {
+            alert("Keine Boss-Fragen mehr! Nimm eine normale Frage.");
             const normal = questions.find(q => !q.used);
-            if(!normal) {
-                alert("Keine offenen Fragen mehr!");
-                return;
-            }
-            selected = normal;
+            if (normal) currentIdx = questions.indexOf(normal);
+            else return;
         } else {
-            selected = bossList[Math.floor(Math.random() * bossList.length)];
+            const randomBoss = bossList[Math.floor(Math.random() * bossList.length)];
+            currentIdx = questions.indexOf(randomBoss);
         }
-        currentIdx = questions.indexOf(selected);
         const modalCard = document.getElementById('quiz-modal-card');
         modalCard.classList.add('boss-modal');
         setTimeout(() => modalCard.classList.remove('boss-modal'), 1000);
         document.getElementById('m-cat-ui').innerHTML = `🔥 BOSS-KAMPF (Runde ${round}) 🔥`;
-        openQuestion(selected);
+        openQuestion(questions[currentIdx]);
     }
 
+    // Kategorien anzeigen (nur normale Kategorien, KEINE Boss-Kategorie im Raster)
     function renderCategories() {
-        if(checkAndStartBossRound()) return;
+        // Zuerst Boss-Check – falls Boss-Runde ansteht, diese starten (überspringt Kategorien)
+        if (checkAndStartBossRound()) return;
+
         const container = document.getElementById('categories-container');
         container.innerHTML = "";
-        // Nur Kategorien mit offenen Fragen anzeigen
-        let cats = [...new Set(questions.filter(q => !q.used).map(q => q.cat))];
-        // "Ultimative Quest" ausblenden
+        // Alle eindeutigen Kategorien aus den NICHT-Boss-Fragen
+        let cats = [...new Set(questions.filter(q => !q.isBoss).map(q => q.cat))];
+        // Kategorie "ULTIMATIVE QUEST" ausblenden (falls vorhanden)
         cats = cats.filter(cat => cat.toLowerCase() !== "ultimative quest");
-        
-        if(cats.length === 0 && qCounter < 20) {
-            container.innerHTML = "<div style='text-align:center; padding:40px;'>Keine weiteren Kategorien verfügbar. Bitte lade eine neue Datei.</div>";
+
+        if (cats.length === 0) {
+            container.innerHTML = `<div class="error-message">⚠️ Keine normalen Kategorien gefunden. Bitte lade eine Excel-Datei mit Fragen (Spalten: Kategorie, Frage, Antwort, Boss).</div>`;
             return;
         }
 
         cats.forEach(cat => {
             const usedCount = categoryUsage[cat] || 0;
-            const disabled = usedCount >= 2;
+            const disabled = usedCount >= 2; // visuell, aber Moderator kann trotzdem klicken (disabled nur Optik)
             const bgColor = getCategoryColor(cat);
             const card = document.createElement('div');
             card.className = "category-card" + (disabled ? " disabled" : "");
             card.style.background = bgColor;
-            const availableCount = questions.filter(q => q.cat === cat && !q.used).length;
             card.innerHTML = `
                 <div>
                     <div class="category-title"><span>${cat}</span><span class="category-count">${usedCount}/2</span></div>
-                    <div class="category-meta">📋 ${availableCount} Fragen offen</div>
+                    <div class="category-meta">📋 ${questions.filter(q => q.cat === cat && !q.used).length} Fragen offen</div>
                 </div>
                 <button class="btn-waehlen">🎯 WÄHLEN</button>
             `;
-            const btn = card.querySelector('.btn-waehlen');
-            if(disabled || availableCount === 0) {
-                btn.disabled = true;
-                btn.style.opacity = "0.5";
-            } else {
-                btn.onclick = () => {
-                    const available = questions.filter(q => q.cat === cat && !q.used);
-                    if(available.length === 0) { alert("Keine Fragen mehr!"); return; }
-                    const randomQ = available[Math.floor(Math.random() * available.length)];
-                    currentIdx = questions.indexOf(randomQ);
-                    categoryUsage[cat] = usedCount + 1;
-                    openQuestion(randomQ);
-                };
-            }
+            card.querySelector('button').onclick = () => {
+                // Auch wenn disabled, kann der Moderator entscheiden – trotzdem auswählbar
+                const available = questions.filter(q => q.cat === cat && !q.used);
+                if (available.length === 0) {
+                    alert("Keine Fragen mehr in dieser Kategorie!");
+                    return;
+                }
+                const randomQ = available[Math.floor(Math.random() * available.length)];
+                currentIdx = questions.indexOf(randomQ);
+                categoryUsage[cat] = usedCount + 1;
+                openQuestion(questions[currentIdx]);
+            };
             container.appendChild(card);
         });
         updateUI();
@@ -316,14 +306,14 @@
     function updateUI() {
         document.getElementById('q-count').innerText = qCounter;
         let countdown = (4 - (qCounter % 4));
-        if(countdown === 0) countdown = 4;
+        if (countdown === 0) countdown = 4;
         document.getElementById('boss-circle').innerText = countdown;
     }
 
     function openQuestion(q) {
         currentQuestionObj = q;
         const isBoss = q.isBoss;
-        if(isBoss) {
+        if (isBoss) {
             document.getElementById('m-cat-ui').innerHTML = `🔥 BOSS-KAMPF 🔥`;
             document.getElementById('m-cat-ui').style.color = "#b85c1a";
         } else {
@@ -339,7 +329,7 @@
     }
 
     function showAnswer() {
-        if(!currentQuestionObj) return;
+        if (!currentQuestionObj) return;
         document.getElementById('answer-display').innerHTML = `✅ Richtige Antwort: <strong>${currentQuestionObj.a}</strong>`;
         document.getElementById('answer-display').style.display = "block";
         document.getElementById('btn-show-answer').style.display = "none";
@@ -347,29 +337,54 @@
     }
 
     function nextRound() {
-        if(currentQuestionObj) {
+        if (currentQuestionObj) {
             currentQuestionObj.used = true;
             qCounter++;
             updateUI();
         }
         toggleModal('modal-quiz', false);
-        if(qCounter >= 20) {
-            alert(`🏆 Spiel beendet! Ihr habt alle 20 Fragen gespielt.`);
-            // Optional: Spiel zurücksetzen oder Seite neu laden
-            if(confirm("Möchtet ihr eine neue Runde starten? Dann wird der Fragenstand zurückgesetzt.")) {
-                // Reset ohne Neuladen
-                qCounter = 0;
-                categoryUsage = {};
-                questions.forEach(q => q.used = false);
-                renderCategories();
-            } else {
-                // Nur Kategorien neu rendern (bleibt beim Ende)
-                renderCategories();
-            }
+        if (qCounter >= 20) {
+            alert(`🏆 Spiel beendet! Ihr habt alle 20 Fragen gespielt.\nTragt eure Punkte selbst in die Bestenliste ein (optional).`);
+            // optional: Ranking zurücksetzen oder Seite neu laden
+            location.reload();
         } else {
             renderCategories();
         }
     }
+
+    // Initialisierung beim Laden der Seite
+    window.onload = () => {
+        playerName = localStorage.getItem('quiz_username');
+        if (!playerName) {
+            window.location.href = 'index.html';
+            return;
+        }
+        // Lade gespeicherte Fragen aus dem Paper-Speicher
+        const stored = localStorage.getItem('p0_v3_paper');
+        if (stored) {
+            questions = JSON.parse(stored);
+            questionCount = questions.length;
+            currentFileName = localStorage.getItem('quiz_filename_paper');
+            updateFileIndicator();
+        } else {
+            questions = [];
+            questionCount = 0;
+            updateFileIndicator();
+        }
+
+        if (questions.length === 0) {
+            // Keine Fragen geladen -> zeige Upload-Modal
+            toggleModal('modal-setup', true);
+            document.getElementById('categories-container').innerHTML = `<div class="error-message">⚠️ Keine Fragen geladen. Bitte lade eine Excel-Datei hoch.</div>`;
+        } else {
+            // Kategorie-Nutzung zurücksetzen (neues Spiel)
+            categoryUsage = {};
+            qCounter = 0;
+            // Alle Fragen als unbenutzt markieren (used = false)
+            questions.forEach(q => q.used = false);
+            renderCategories();
+        }
+    };
 </script>
 </body>
 </html>
