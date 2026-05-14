@@ -3,179 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>POINT ZERO | Space Edition</title>
+    <title>SPACE TERMINAL 2.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap');
         
-        :root { 
-            --bg: #030305; --surface: #0f111a; --accent: #ff0055; 
-            --gold: #ffcc00; --blue: #00d4ff; --green: #00ff88; --text: #e0e0e5; 
+        :root { --bg: #010103; --surface: rgba(15, 17, 26, 0.8); --accent: #ff0055; --blue: #00d4ff; --green: #00ff88; }
+
+        body { font-family: 'Rajdhani', sans-serif; background: var(--bg); color: #fff; margin: 0; overflow-x: hidden; }
+
+        /* Scanline Effekt */
+        body::before {
+            content: " "; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 10000; pointer-events: none; background-size: 100% 4px, 3px 100%;
         }
 
-        body { 
-            font-family: 'Rajdhani', sans-serif; background: var(--bg); color: var(--text); 
-            margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; 
+        header { 
+            padding: 20px; background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--blue); 
+            display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100;
         }
 
-        #ui-top { position: sticky; top: 0; width: 100%; max-width: 600px; padding: 15px; z-index: 1000; box-sizing: border-box; background: var(--bg); }
+        .file-badge { font-size: 0.6rem; background: var(--blue); color: #000; padding: 3px 8px; border-radius: 4px; font-family: 'Orbitron'; margin-top: 5px; display: inline-block; }
 
-        .status-container { 
-            background: var(--surface); border: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 20px; padding: 15px; display: flex; 
-            justify-content: space-between; align-items: center; 
-        }
-
-        .hp-bar-bg { height: 6px; background: #222; border-radius: 3px; margin-top: 8px; overflow: hidden; }
-        #hp-bar-fill { height: 100%; background: var(--accent); width: 100%; transition: 0.5s; }
-        .hp-text { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: var(--accent); transition: 0.3s;}
-
-        .joker-row { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
+        .hp-text { font-family: 'Orbitron'; font-size: 2rem; color: var(--blue); text-shadow: 0 0 10px var(--blue); }
+        
+        .joker-row { display: flex; gap: 15px; margin: 20px 0; justify-content: center; }
         .joker-box { 
-            background: #1a1c26; border: 1px solid #333; border-radius: 12px; 
-            width: 45px; height: 45px; display: flex; align-items: center; 
-            justify-content: center; font-size: 1.2rem; cursor: pointer; transition: 0.2s;
+            background: rgba(255,255,255,0.05); border: 1px solid #333; border-radius: 15px; 
+            width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; 
+            font-size: 1.5rem; cursor: pointer; transition: 0.3s;
         }
-        .joker-box.active { border-color: var(--blue); box-shadow: 0 0 15px var(--blue); transform: translateY(-2px); }
-        .joker-box.used { opacity: 0.1; filter: grayscale(1); pointer-events: none; }
+        .joker-box.active { border-color: var(--blue); box-shadow: 0 0 20px var(--blue); transform: scale(1.1); background: rgba(0,212,255,0.1); }
+        .joker-box.used { opacity: 0.05; pointer-events: none; filter: grayscale(1); }
 
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 92%; max-width: 1000px; padding-bottom: 120px; }
-        .card { background: var(--surface); border-radius: 16px; padding: 20px 10px; border: 1px solid rgba(255,255,255,0.05); text-align: center; cursor: pointer; transition: 0.2s; }
-        .card:hover { border-color: var(--blue); background: rgba(0, 212, 255, 0.05); }
-        .card.disabled { opacity: 0.2; cursor: not-allowed; border-color: transparent !important; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; max-width: 800px; margin: auto; }
+        .card { 
+            background: var(--surface); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; 
+            padding: 25px 15px; text-align: center; cursor: pointer; transition: 0.3s; backdrop-filter: blur(10px);
+        }
+        .card:hover { border-color: var(--blue); background: rgba(0,212,255,0.15); box-shadow: 0 0 20px rgba(0,212,255,0.2); }
+        .card.disabled { opacity: 0.1; cursor: not-allowed; }
 
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-2 { background: var(--surface); width: 85%; max-width: 400px; padding: 25px; border-radius: 20px; border: 1px solid #333; text-align: center; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
+        .modal { background: #0a0b10; width: 90%; max-width: 450px; padding: 40px; border-radius: 30px; border: 1px solid var(--blue); text-align: center; }
 
-        .btn-confirm { background: var(--accent); color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; font-family: 'Orbitron'; cursor: pointer; margin-top: 10px; transition: 0.2s; font-size: 1rem;}
-        .btn-confirm:hover { box-shadow: 0 0 15px var(--accent); }
+        input { background: #000; border: 2px solid #333; color: var(--blue); padding: 15px; border-radius: 15px; width: 80%; text-align: center; font-family: 'Orbitron'; font-size: 1.5rem; margin: 20px 0; }
 
-        footer { position: fixed; bottom: 15px; width: 95%; max-width: 600px; display: flex; gap: 5px; }
-        .btn-nav { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 12px 5px; border-radius: 10px; color: #aaa; font-size: 0.6rem; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.2s;}
-        .btn-nav:hover { background: rgba(255,255,255,0.1); color: white; }
+        .btn-action { background: var(--blue); color: #000; border: none; padding: 15px 30px; border-radius: 12px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-cancel { background: transparent; color: #666; border: none; cursor: pointer; margin-top: 20px; text-decoration: underline; }
 
-        input { background: #000; border: 2px solid #333; color: var(--blue); padding: 12px; border-radius: 10px; width: 80%; text-align: center; font-family: 'Orbitron'; font-size: 1.2rem; outline: none; }
-        input:focus { border-color: var(--blue); box-shadow: 0 0 10px rgba(0, 212, 255, 0.3); }
-
-        .score-row { display: flex; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid #222; font-family: 'Orbitron'; font-size: 0.8rem; }
-
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25%, 75% { transform: translateX(-10px); } 50% { transform: translateX(10px); } }
-        .shake { animation: shake 0.4s ease-in-out; border-color: var(--accent) !important; box-shadow: 0 0 20px rgba(255, 0, 85, 0.5); }
-        @keyframes celebrate { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); border-color: var(--green); box-shadow: 0 0 20px var(--green); } }
-        .winner { animation: celebrate 0.6s ease-in-out; }
-
-        .guide-text { text-align: left; font-size: 0.9rem; line-height: 1.5; color: #ccc; margin-bottom: 15px; }
-        .guide-text ul { padding-left: 20px; margin-top: 5px; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .boss-warn { color: var(--accent); animation: pulse 1s infinite; font-family: 'Orbitron'; }
     </style>
 </head>
 <body>
 
-    <div id="ui-top">
-        <div class="status-container">
-            <div style="flex-grow: 1;">
-                <div style="font-size: 0.65rem; color: #888; font-weight: bold;">
-                    PILOT: <span id="pilot-display" style="color:var(--blue)">...</span> | 
-                    MISSION: <span id="q-count">0</span>/20 | 
-                    SCORE: <span id="current-score" style="color:var(--green)">0</span>
-                </div>
-                <div class="hp-text" id="hp-val">100</div>
-                <div class="hp-bar-bg"><div id="hp-bar-fill"></div></div>
-            </div>
-            <div style="text-align: center; margin-left: 15px;">
-                <div style="font-size: 0.5rem; color: #888;">BOSS IN</div>
-                <div id="boss-circle" style="border: 2px solid var(--gold); border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; color: var(--gold); font-family: 'Orbitron'; margin: 5px auto 0;">4</div>
-            </div>
+    <header>
+        <div>
+            <div style="font-family:'Orbitron'; font-size:0.8rem; color:var(--blue);">DEEP SPACE TERMINAL</div>
+            <div id="active-file" class="file-badge">KEIN SYSTEM GELADEN</div>
         </div>
-        <div class="joker-row">
-            <div class="joker-box" id="j-Schild" onclick="useJoker('Schild')" title="Max 10 Schaden">🛡️</div>
-            <div class="joker-box" id="j-Schwert" onclick="useJoker('Schwert')" title="+15 HP bei Perfekt">⚔️</div>
-            <div class="joker-box" id="j-Trank" onclick="useJoker('Trank')" title="Schaden halbiert">🧪</div>
-        </div>
+        <div class="hp-text" id="hp-val">100</div>
+    </header>
+
+    <div class="joker-row">
+        <div class="joker-box" id="j-Schild" onclick="useJoker('Schild')">🛡️</div>
+        <div class="joker-box" id="j-Schwert" onclick="useJoker('Schwert')">⚔️</div>
+        <div class="joker-box" id="j-Trank" onclick="useJoker('Trank')">🧪</div>
     </div>
 
     <div class="grid" id="game-grid"></div>
 
-    <div id="modal-quiz" class="overlay"><div class="modal-2">
-        <div id="m-cat-ui" style="color:var(--blue); font-size:0.7rem; font-family:'Orbitron'">CAT</div>
-        <div id="m-q" style="margin:20px 0; font-size:1.1rem">Frage...</div>
-        <input type="number" id="ans-input" inputmode="numeric" placeholder="WERT">
-        <button class="btn-confirm" id="btn-submit" onclick="checkAnswer()">ÜBERMITTELN</button>
-        <div id="m-feedback" style="margin-top:15px; font-family:'Orbitron'; font-size:0.9rem; min-height: 40px;"></div>
-        <button id="btn-next" style="display:none; background:var(--green); color:#000;" class="btn-confirm" onclick="nextRound()">NÄCHSTER SEKTOR</button>
+    <div id="modal-setup" class="overlay"><div class="modal">
+        <h2 style="font-family:'Orbitron'; color:var(--blue)">UPLINK INITIALISIEREN</h2>
+        <input type="file" id="excel-file" accept=".xlsx, .xls" style="border:none; font-size: 0.8rem;">
+        <button class="btn-action" onclick="processExcel()">SYNC STARTEN</button>
+        <button class="btn-cancel" onclick="toggleModal('modal-setup', false)">ABBRECHEN</button>
     </div></div>
 
-    <div id="modal-ranking" class="overlay"><div class="modal-2">
-        <h2 style="color:var(--gold); font-family:'Orbitron'">RANKING</h2>
-        <div id="ranking-list" style="margin-bottom:15px; text-align: left;"></div>
-        <button class="btn-confirm" style="background:#333;" onclick="toggleModal('modal-ranking', false)">SCHLIESSEN</button>
+    <div id="modal-quiz" class="overlay"><div class="modal">
+        <div id="m-boss" class="boss-warn" style="display:none">⚠ BOSS DETEKTIERT ⚠</div>
+        <div id="m-q" style="font-size: 1.4rem; margin: 20px 0;">Lade Frage...</div>
+        <input type="number" id="ans-input" inputmode="numeric">
+        <button class="btn-action" id="btn-submit" onclick="checkAnswer()">FEUERN</button>
+        <div id="m-feedback" style="margin-top:20px; font-family:'Orbitron'; font-size:0.8rem;"></div>
+        <button id="btn-next" style="display:none" class="btn-action" onclick="nextRound()">NÄCHSTER SEKTOR</button>
     </div></div>
 
-    <div id="modal-setup" class="overlay"><div class="modal-2">
-        <h2 style="font-family:'Orbitron'">UPLINK</h2>
-        <p style="font-size:0.8rem; color:#aaa;">Lade die System-Daten (.xlsx) hoch.</p>
-        <input type="file" id="excel-file" accept=".xlsx, .xls" style="border:none; padding:0; width:100%; margin-bottom:20px;">
-        <button class="btn-confirm" style="background:var(--blue); color:#000;" onclick="processExcel()">IMPORT</button>
-    </div></div>
-
-    <div id="modal-guide" class="overlay"><div class="modal-2">
-        <h2 style="color:var(--gold); font-family:'Orbitron'">MISSION BRIEFING</h2>
-        <div class="guide-text">
-            <ul>
-                <li><b>Dauer:</b> Exakt 20 strategische Schätzfragen.</li>
-                <li><b>Ressourcen:</b> Jede Kategorie nur 2-mal wählbar.</li>
-                <li><b>Boss-Events:</b> Alle 4 Runden erscheint ein Boss-Sektor.</li>
-                <li><b>Schaden:</b> Differenz zum Zielwert = HP Abzug.</li>
-                <li><b>Reparatur:</b> Punkt-Treffer (Diff 0) regeneriert 5 HP!</li>
-            </ul>
-        </div>
-        <button class="btn-confirm" onclick="toggleModal('modal-guide', false)">VERSTANDEN</button>
-    </div></div>
-
-    <div id="modal-gameover" class="overlay"><div class="modal-2">
-        <h1 id="go-title" style="font-family:'Orbitron'; font-size:1.8rem; margin-top:0;">ENDE</h1>
-        <div id="go-score" style="font-size: 1.5rem; font-weight: bold; margin: 20px 0; color:var(--blue); font-family:'Orbitron';"></div>
-        <button class="btn-confirm" onclick="location.reload()">RE-INITIALIZE</button>
-        <button class="btn-confirm" style="background:transparent; border:1px solid #555; color:#aaa;" onclick="window.location.href='index.html'">ABBRUCH ZUM MENÜ</button>
-    </div></div>
-
-    <footer>
-        <button class="btn-nav" onclick="window.location.href='index.html'">🏠 HOME</button>
-        <button class="btn-nav" onclick="toggleModal('modal-guide', true)">Protokoll</button>
-        <button class="btn-nav" onclick="showRanking()">Ranking</button>
-        <button class="btn-nav" onclick="toggleModal('modal-setup', true)">Daten</button>
+    <footer style="position: fixed; bottom: 0; width: 100%; display: flex; gap: 5px; padding: 10px; background: rgba(0,0,0,0.8);">
+        <button onclick="toggleModal('modal-setup', true)" style="flex:1; background:#111; color:var(--blue); border:1px solid var(--blue); padding:10px; border-radius:10px; font-family:'Orbitron'; font-size:0.6rem;">NEUE DATEN</button>
+        <button onclick="location.reload()" style="flex:1; background:#111; color:#fff; border:1px solid #333; padding:10px; border-radius:10px; font-family:'Orbitron'; font-size:0.6rem;">RESET</button>
     </footer>
 
     <script>
         const SUPABASE_URL = 'https://eaxuqsiwrfqshqkwtnlz.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_PViFkgap3gvsxBgG2NSAjA_Oc0eASzI';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let questions = JSON.parse(localStorage.getItem('p0_v3')) || [];
-        let hp = 100, score = 0, qCounter = 0, currentIdx = null, activeJoker = null, pilotName = "";
+        let questions = JSON.parse(localStorage.getItem('space_data_v2')) || [];
+        let hp = 100, score = 0, qCounter = 0, currentIdx = null, activeJoker = null;
         let usedJokers = { Schild: false, Schwert: false, Trank: false }, categoryUsage = {};
-
-        const safeMap = (row, keys) => {
-            const k = Object.keys(row).find(x => keys.some(s => x.toLowerCase().trim() === s.toLowerCase()));
-            return k ? row[k] : null;
-        };
 
         function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
 
-        window.onload = () => {
-            pilotName = localStorage.getItem('quiz_username');
-            if(!pilotName) { window.location.href = 'index.html'; return; }
-            document.getElementById('pilot-display').innerText = pilotName;
-            if(questions.length < 5) toggleModal('modal-setup', true); 
-            else renderBoard();
-        };
-
-        async function showRanking() {
-            toggleModal('modal-ranking', true);
-            const list = document.getElementById('ranking-list');
-            list.innerHTML = "Sync...";
-            const { data, error } = await supabaseClient.from('highscores').select('*').order('score', { ascending: false }).limit(8);
-            list.innerHTML = error ? "Netzwerkfehler." : data.map((s, i) => `<div class="score-row"><span>${i+1}. ${s.name}</span><span style="color:var(--green)">${s.score}</span></div>`).join('');
+        // NEU: Joker Toggle Funktion
+        function useJoker(type) {
+            if(usedJokers[type]) return;
+            if(activeJoker === type) {
+                activeJoker = null;
+                document.getElementById('j-'+type).classList.remove('active');
+            } else {
+                activeJoker = type;
+                document.querySelectorAll('.joker-box').forEach(b => b.classList.remove('active'));
+                document.getElementById('j-'+type).classList.add('active');
+            }
         }
 
         function processExcel() {
@@ -183,31 +126,21 @@
             if(!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const wb = XLSX.read(data, {type: 'array'});
-                    const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-                    
-                    const parsed = json.map(r => {
-                        const qVal = safeMap(r, ['frage', 'q', 'question']);
-                        const aVal = safeMap(r, ['antwort', 'a', 'answer', 'wert']);
-                        const cVal = safeMap(r, ['kategorie', 'cat', 'bereich']) || "Misc";
-                        const bVal = safeMap(r, ['boss', 'endgegner']) || "";
-                        return {
-                            cat: cVal,
-                            q: qVal,
-                            a: parseFloat(String(aVal).replace(/[^0-9.-]/g, '')),
-                            isBoss: String(bVal).toLowerCase().includes('ja'),
-                            used: false
-                        };
-                    });
+                const data = new Uint8Array(e.target.result);
+                const wb = XLSX.read(data, {type: 'array'});
+                const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                
+                questions = json.map(r => ({
+                    cat: r.Kategorie || r.cat || "Sektor",
+                    q: r.Frage || r.q,
+                    a: parseFloat(String(r.Antwort || r.a).replace(/[^0-9.-]/g, '')),
+                    isBoss: String(r.Boss || "").toLowerCase().includes('ja'),
+                    used: false
+                })).filter(q => q.q && !isNaN(q.a));
 
-                    questions = parsed.filter(d => d.q && !isNaN(d.a));
-                    if(questions.length > 0) {
-                        localStorage.setItem('p0_v3', JSON.stringify(questions));
-                        location.reload();
-                    } else alert("Systemfehler: Keine korrekten Daten (Frage/Antwort Spalte fehlt).");
-                } catch(err) { alert("Import fehlgeschlagen."); }
+                localStorage.setItem('space_data_v2', JSON.stringify(questions));
+                localStorage.setItem('active_filename', file.name);
+                location.reload();
             };
             reader.readAsArrayBuffer(file);
         }
@@ -216,76 +149,47 @@
             const grid = document.getElementById('game-grid');
             grid.innerHTML = "";
             const nextQ = qCounter + 1;
+            const isBossRound = (nextQ % 4 === 0);
 
-            if ((nextQ % 4 === 0) || (nextQ === 20)) {
+            if(isBossRound) {
                 const card = document.createElement('div');
-                card.className = "card"; card.style.gridColumn = "1 / -1"; card.style.borderColor = "var(--gold)";
-                card.style.background = "rgba(255, 204, 0, 0.1)";
-                card.innerHTML = `<div style="color:var(--gold); font-weight:bold; font-size:1.2rem; font-family:'Orbitron'">⚠️ BOSS SEKTOR ${nextQ} ⚠️</div>`;
+                card.className = "card"; card.style.gridColumn = "1/-1"; card.style.borderColor = "var(--accent)";
+                card.innerHTML = `<div class="boss-warn">BOSS-ANOMALIE ENTDECKT</div>`;
                 card.onclick = () => {
-                    const p = questions.filter(q => q.isBoss && !q.used);
-                    currentIdx = questions.indexOf(p.length > 0 ? p[0] : questions.find(q => !q.used));
-                    openQuestion(questions[currentIdx]);
+                    const pool = questions.filter(q => q.isBoss && !q.used);
+                    startQuiz(questions.indexOf(pool[0] || questions.find(q => !q.used)), true);
                 };
                 grid.appendChild(card);
             } else {
-                [...new Set(questions.filter(q => !q.isBoss).map(q => q.cat))].forEach(cat => {
+                [...new Set(questions.map(q => q.cat))].forEach(cat => {
                     const u = categoryUsage[cat] || 0;
                     const card = document.createElement('div');
                     card.className = "card" + (u >= 2 ? " disabled" : "");
-                    card.innerHTML = `<div style="font-size:0.8rem; font-weight:bold; letter-spacing:1px;">${cat}</div><div style="font-size:0.6rem; color:#666; margin-top:5px;">${u}/2</div>`;
+                    card.innerHTML = `<div>${cat}</div><div style="font-size:0.7rem; color:var(--blue)">${u}/2</div>`;
                     if(u < 2) card.onclick = () => {
-                        const p = questions.filter(q => q.cat === cat && !q.used);
-                        currentIdx = questions.indexOf(p[Math.floor(Math.random()*p.length)]);
+                        const pool = questions.filter(q => q.cat === cat && !q.used);
+                        startQuiz(questions.indexOf(pool[0]));
                         categoryUsage[cat] = u + 1;
-                        openQuestion(questions[currentIdx]);
                     };
                     grid.appendChild(card);
                 });
             }
-            updateUI();
         }
 
-        function updateUI() {
-            document.getElementById('hp-val').innerText = hp;
-            document.getElementById('hp-val').style.color = hp < 30 ? "var(--accent)" : "var(--blue)";
-            document.getElementById('hp-bar-fill').style.width = Math.max(0, hp) + "%";
-            document.getElementById('hp-bar-fill').style.background = hp < 30 ? "var(--accent)" : "var(--blue)";
-            document.getElementById('current-score').innerText = score;
-            document.getElementById('q-count').innerText = qCounter;
-            document.getElementById('boss-circle').innerText = (4 - (qCounter % 4));
-        }
-
-        function useJoker(type) {
-            if(usedJokers[type] || activeJoker) return;
-            activeJoker = type;
-            document.querySelectorAll('.joker-box').forEach(b => b.classList.remove('active'));
-            document.getElementById('j-'+type).classList.add('active');
-        }
-
-        function openQuestion(q) {
-            document.getElementById('m-cat-ui').innerText = q.cat;
-            document.getElementById('m-q').innerText = q.q;
+        function startQuiz(idx, boss = false) {
+            currentIdx = idx;
+            document.getElementById('m-q').innerText = questions[idx].q;
+            document.getElementById('m-boss').style.display = boss ? 'block' : 'none';
             document.getElementById('m-feedback').innerText = "";
-            document.getElementById('btn-next').style.display = 'none';
-            document.getElementById('btn-submit').style.display = 'block';
             document.getElementById('ans-input').value = "";
+            document.getElementById('btn-submit').style.display = 'block';
+            document.getElementById('btn-next').style.display = 'none';
             toggleModal('modal-quiz', true);
-            setTimeout(() => document.getElementById('ans-input').focus(), 200);
         }
-
-        // Enter-Taste Support
-        document.getElementById('ans-input').addEventListener('keypress', function(e) {
-            if(e.key === 'Enter') {
-                if(document.getElementById('btn-submit').style.display !== 'none') checkAnswer();
-                else nextRound();
-            }
-        });
 
         function checkAnswer() {
             const q = questions[currentIdx];
             const guess = parseFloat(document.getElementById('ans-input').value);
-            const modal = document.querySelector('#modal-quiz .modal-2');
             if(isNaN(guess)) return;
 
             let diff = Math.abs(guess - q.a);
@@ -294,41 +198,41 @@
 
             if(diff === 0) {
                 let heal = (activeJoker === 'Schwert') ? 15 : 5;
-                hp = Math.min(100, hp + heal); score += 250;
-                modal.classList.add('winner');
-                document.getElementById('m-feedback').innerHTML = `<span style='color:var(--green)'>✨ PERFEKT! ✨<br>+250 Pkt & +${heal} HP System-Heilung!</span>`;
-            } else if(diff <= 5) {
-                hp -= diff; score += Math.max(0, 100 - diff);
-                document.getElementById('m-feedback').innerHTML = `<span style='color:var(--blue)'>GUTE BERECHNUNG (-${diff} HP)<br>Zielwert: ${q.a}</span>`;
+                hp = Math.min(100, hp + heal); score += 500;
+                document.getElementById('m-feedback').innerHTML = `<span style="color:var(--green)">SYSTEM REPARIERT! +${heal} HP</span>`;
             } else {
                 hp -= diff; score += Math.max(0, 100 - diff);
-                modal.classList.add('shake');
-                document.getElementById('m-feedback').innerHTML = `<span style='color:var(--accent)'>EINSCHLAG! -${diff} HP<br>Korrekt: ${q.a}</span>`;
+                document.getElementById('m-feedback').innerHTML = `<span style="color:var(--accent)">EINSCHLAG: -${diff} HP | LÖSUNG: ${q.a}</span>`;
             }
 
-            setTimeout(() => { modal.classList.remove('shake', 'winner'); }, 600);
             if(activeJoker) {
                 usedJokers[activeJoker] = true;
-                document.getElementById('j-'+activeJoker).classList.remove('active');
                 document.getElementById('j-'+activeJoker).classList.add('used');
                 activeJoker = null;
             }
+
             q.used = true; qCounter++;
+            document.getElementById('hp-val').innerText = hp;
             document.getElementById('btn-submit').style.display = 'none';
             document.getElementById('btn-next').style.display = 'block';
-            updateUI();
+            if(hp <= 0 || qCounter >= 20) endGame();
         }
 
-        async function nextRound() {
-            toggleModal('modal-quiz', false);
-            if(hp <= 0 || qCounter >= 20) {
-                document.getElementById('go-title').innerText = hp <= 0 ? "MISSION FAILED ❌" : "MISSION SUCCESS 🏆";
-                document.getElementById('go-title').style.color = hp <= 0 ? "var(--accent)" : "var(--green)";
-                document.getElementById('go-score').innerText = "SCORE: " + score;
-                toggleModal('modal-gameover', true);
-                if(score > 0) await supabaseClient.from('highscores').insert([{ name: pilotName, score: score }]);
-            } else renderBoard();
+        function nextRound() { toggleModal('modal-quiz', false); renderBoard(); }
+
+        async function endGame() {
+            const name = localStorage.getItem('quiz_username');
+            await sb.from('highscores').insert([{ name, score }]);
+            alert("MISSION BEENDET. SCORE: " + score);
+            location.reload();
         }
+
+        window.onload = () => {
+            const fName = localStorage.getItem('active_filename');
+            if(fName) document.getElementById('active-file').innerText = "📡 " + fName;
+            if(questions.length > 0) renderBoard();
+            else toggleModal('modal-setup', true);
+        };
     </script>
 </body>
 </html>
