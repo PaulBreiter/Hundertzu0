@@ -1,121 +1,420 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QUIZ PULSE 2.0 | High-End Hub</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Orbitron:wght@700&display=swap');
-        
-        body { 
-            margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            background: #05050a; color: white; font-family: 'Montserrat', sans-serif; overflow: hidden;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>QUIZ PULSE 2.0 — HUB</title>
 
-        .bg-glow {
-            position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(108, 92, 231, 0.2) 0%, transparent 70%);
-            filter: blur(80px); z-index: -1; animation: move 20s infinite alternate ease-in-out;
-        }
-        @keyframes move { from { transform: translate(-40%, -40%); } to { transform: translate(40%, 40%); } }
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800;900&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
 
-        .login-box {
-            background: rgba(255, 255, 255, 0.03); padding: 50px; border-radius: 40px; text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(25px);
-            box-shadow: 0 25px 60px rgba(0,0,0,0.6); width: 90%; max-width: 450px; position: relative;
-        }
+  <style>
+    :root{
+      --bg-1: #05050a;
+      --bg-2: #0b0b14;
+      --glass: rgba(255,255,255,0.04);
+      --muted: rgba(255,255,255,0.65);
+      --accent-a: #6c5ce7;
+      --accent-b: #00d1ff;
+      --accent-c: #ff6b6b;
+      --card-radius: 28px;
+      --max-w: 1100px;
+    }
 
-        h1 { font-size: 2.2rem; margin-bottom: 5px; letter-spacing: 2px; background: linear-gradient(to right, #fff, #a29bfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        p { color: #666; margin-bottom: 30px; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; }
+    /* Reset & layout */
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Montserrat,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:#fff;background:linear-gradient(180deg,var(--bg-1),var(--bg-2));-webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
+    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:36px;}
 
-        input {
-            width: 100%; padding: 22px; border-radius: 20px; border: 2px solid #6c5ce7;
-            background: rgba(0,0,0,0.5); color: #fff; font-size: 1.2rem; text-align: center;
-            margin-bottom: 20px; font-family: 'Montserrat', sans-serif; box-sizing: border-box; outline: none; transition: 0.3s;
-        }
-        input:focus { border-color: #a29bfe; box-shadow: 0 0 25px rgba(108,92,231,0.4); }
+    /* Background layers (high-end) */
+    .bg {
+      position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;
+      background:
+        radial-gradient(1200px 600px at 10% 20%, rgba(108,92,231,0.12), transparent 12%),
+        radial-gradient(900px 500px at 90% 80%, rgba(0,209,255,0.06), transparent 12%),
+        linear-gradient(180deg, rgba(10,8,20,0.6), rgba(5,5,10,0.9));
+      filter: saturate(1.05);
+    }
+    /* animated stars canvas fallback */
+    .stars { position: absolute; inset:0; z-index:0; opacity:0.18; mix-blend-mode:screen; }
 
-        .btn-main {
-            background: linear-gradient(90deg, #6c5ce7, #a29bfe); color: white; border: none;
-            padding: 22px; border-radius: 20px; font-weight: 900; cursor: pointer; width: 100%; 
-            transition: 0.3s; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;
-        }
-        .btn-main:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(108,92,231,0.4); }
+    /* Hub card */
+    .hub {
+      position:relative; z-index:10; width:100%; max-width:var(--max-w); display:grid; grid-template-columns: 1fr 420px; gap:28px; align-items:center;
+      padding:28px; border-radius:28px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 30px 80px rgba(2,2,8,0.7); backdrop-filter: blur(12px);
+    }
 
-        .mode-grid { display: none; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 20px; animation: fadeIn 0.6s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    /* Left: hero */
+    .hero {
+      padding:28px 32px;
+    }
+    .logo {
+      display:flex;align-items:center;gap:16px;margin-bottom:18px;
+    }
+    .logo .mark {
+      width:72px;height:72px;border-radius:18px;display:flex;align-items:center;justify-content:center;
+      background: linear-gradient(135deg,var(--accent-a),var(--accent-b));
+      box-shadow: 0 10px 30px rgba(108,92,231,0.28), inset 0 -6px 18px rgba(0,0,0,0.18);
+      font-family:Orbitron, sans-serif;font-weight:800;font-size:1.6rem;color:#fff;
+    }
+    .logo .title {
+      font-weight:900;font-size:1.6rem;letter-spacing:1px;
+      background: linear-gradient(90deg,#fff, rgba(162,155,254,0.9)); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .tagline { color:var(--muted); font-weight:700; margin-bottom:18px; font-size:0.95rem; }
 
-        .mode-card { 
-            width: 160px; padding: 30px 10px; border-radius: 30px; text-decoration: none; display: flex; flex-direction: column; 
-            align-items: center; transition: 0.4s; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02);
-        }
-        .mode-card:hover { transform: scale(1.05); border-color: #6c5ce7; background: rgba(108,92,231,0.1); }
-        .mode-card span { font-size: 3rem; margin-bottom: 15px; }
-        .mode-card h2 { font-size: 0.9rem; margin: 0; color: #fff; }
+    .features { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:22px; }
+    .pill { padding:8px 12px; border-radius:999px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); font-weight:800; font-size:0.82rem; color:var(--muted); }
 
-        .footer-link { margin-top: 30px; color: #6c5ce7; cursor: pointer; font-size: 0.75rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; transition: 0.3s; }
-        .footer-link:hover { opacity: 1; text-decoration: underline; }
+    .intro {
+      margin-top:6px;color:rgba(255,255,255,0.85);line-height:1.45;font-size:0.98rem;
+      max-width:720px;
+    }
 
-        /* Help Modal */
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(15px); }
-        .modal { background: #111; padding: 40px; border-radius: 35px; border: 1px solid #333; width: 85%; max-width: 400px; box-shadow: 0 0 50px rgba(0,0,0,1); }
-        .modal h2 { color: #6c5ce7; font-size: 1.5rem; margin-top: 0; }
-        .modal ul { text-align: left; padding: 0; list-style: none; }
-        .modal li { margin-bottom: 15px; color: #ddd; font-size: 0.9rem; line-height: 1.4; border-bottom: 1px solid #222; padding-bottom: 10px; }
-    </style>
+    /* Right: controls */
+    .panel {
+      padding:22px;border-radius:20px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.04);
+    }
+    .panel h3 { margin:0 0 8px 0; font-size:1.05rem; font-weight:900; letter-spacing:0.6px; color:#fff; }
+    .field { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+
+    .input {
+      width:100%; padding:16px 18px; border-radius:14px; border:1px solid rgba(255,255,255,0.06);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); color:#fff; font-weight:800; font-size:1rem;
+      outline:none; transition: box-shadow .18s, transform .12s, border-color .12s;
+    }
+    .input:focus { box-shadow: 0 10px 30px rgba(108,92,231,0.12); border-color: rgba(162,155,254,0.9); transform: translateY(-2px); }
+
+    .row { display:flex; gap:12px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+
+    .theme-card {
+      flex:1 1 160px; min-width:140px; padding:14px; border-radius:14px; cursor:pointer; display:flex; flex-direction:column; gap:8px;
+      align-items:center; justify-content:center; text-align:center; transition: transform .18s, box-shadow .18s, border-color .18s;
+      border:1px solid rgba(255,255,255,0.04); background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+    }
+    .theme-card:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 18px 50px rgba(0,0,0,0.6); border-color: rgba(108,92,231,0.18); }
+    .theme-card .emoji { font-size:2.4rem; filter: drop-shadow(0 6px 18px rgba(108,92,231,0.12)); }
+    .theme-card .label { font-weight:900; font-size:0.95rem; letter-spacing:0.6px; }
+
+    .cta {
+      margin-top:18px; display:flex; gap:12px; align-items:center; justify-content:space-between;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg,var(--accent-a),var(--accent-b)); color:#fff; padding:14px 18px; border-radius:14px; border:none; font-weight:900; cursor:pointer;
+      box-shadow: 0 18px 50px rgba(108,92,231,0.22);
+    }
+    .btn-ghost {
+      background:transparent;border:1px solid rgba(255,255,255,0.06); color:var(--muted); padding:12px 14px;border-radius:12px; font-weight:800; cursor:pointer;
+    }
+
+    .meta { margin-top:12px; font-size:0.85rem; color:var(--muted); display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+
+    /* subtle micro-animations */
+    .pulse { animation: pulseGlow 2.6s infinite ease-in-out; }
+    @keyframes pulseGlow { 0% { box-shadow: 0 8px 30px rgba(108,92,231,0.12); } 50% { box-shadow: 0 18px 60px rgba(108,92,231,0.18); } 100% { box-shadow: 0 8px 30px rgba(108,92,231,0.12); } }
+
+    /* onboarding overlay (one-time) */
+    .onboard {
+      position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:40;
+      background: linear-gradient(180deg, rgba(2,2,6,0.6), rgba(2,2,6,0.85)); backdrop-filter: blur(6px);
+      padding:28px; opacity:0; pointer-events:none; transition:opacity .25s;
+    }
+    .onboard.show { opacity:1; pointer-events:auto; }
+    .onboard-card { width:100%; max-width:760px; border-radius:20px; padding:26px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.06); box-shadow:0 30px 80px rgba(0,0,0,0.7); }
+    .onboard h2 { margin:0 0 8px 0; font-size:1.25rem; font-weight:900; }
+    .onboard p { margin:0;color:var(--muted);line-height:1.45 }
+    .onboard .ok { margin-top:18px; display:flex; justify-content:flex-end; }
+
+    /* small footer */
+    .footer { margin-top:18px; text-align:center; color:rgba(255,255,255,0.45); font-size:0.82rem; }
+
+    /* responsive */
+    @media (max-width:980px){
+      .hub{grid-template-columns:1fr; padding:18px;}
+      .panel{order:2}
+      .hero{order:1}
+    }
+  </style>
 </head>
 <body>
-    <div class="bg-glow"></div>
-    
-    <div id="login-area" class="login-box">
-        <h1>QUIZ PULSE</h1>
-        <p>HIGH-END KNOWLEDGE BATTLE</p>
-        <input type="text" id="player-name" placeholder="DEIN NAME..." maxlength="12">
-        <button class="btn-main" onclick="saveName()">START MISSION</button>
-        <div class="footer-link" onclick="toggleHelp(true)">Anleitung lesen</div>
-    </div>
+  <div class="bg" aria-hidden="true">
+    <canvas id="starsCanvas" class="stars"></canvas>
+  </div>
 
-    <div id="selection-area" class="mode-grid">
-        <h1 style="width:100%; text-align:center; font-size: 1.5rem;">DESIGN WÄHLEN</h1>
-        <a href="space.html" class="mode-card">
-            <span>🚀</span>
-            <h2 style="font-family:'Orbitron'">NEON SPACE</h2>
-        </a>
-        <a href="comic.html" class="mode-card">
-            <span>💥</span>
-            <h2 style="font-family:'Montserrat'">HERO COMIC</h2>
-        </a>
-        <div class="footer-link" style="width:100%; text-align:center" onclick="clearName()">Name ändern</div>
-    </div>
-
-    <div id="help-modal" class="overlay">
-        <div class="modal">
-            <h2>ANLEITUNG</h2>
-            <ul>
-                <li><strong>🛡️ Schild-Joker:</strong> Limitiert den Schaden bei Fehlern auf max. 10 HP.</li>
-                <li><strong>⚔️ Schwert-Joker:</strong> Heilt dich bei richtiger Antwort um satte 15 HP.</li>
-                <li><strong>🧪 Trank-Joker:</strong> Halbiert den erlittenen Schaden bei dieser Frage.</li>
-                <li><strong>💥 Boss-Kampf:</strong> Alle 4 Runden erscheint ein Boss mit Spezialfragen.</li>
-                <li><strong>🏆 Ziel:</strong> Überlebe 20 Runden und knacke den Highscore!</li>
-            </ul>
-            <button class="btn-main" onclick="toggleHelp(false)">ALLES KLAR!</button>
+  <div class="wrap">
+    <main class="hub" role="main" aria-labelledby="hubTitle">
+      <!-- HERO / LEFT -->
+      <section class="hero" aria-hidden="false">
+        <div class="logo" aria-hidden="true">
+          <div class="mark">QP</div>
+          <div>
+            <div class="title">QUIZ PULSE</div>
+            <div class="tagline">High‑End Knowledge Battle — 2.0</div>
+          </div>
         </div>
-    </div>
 
-    <script>
-        function saveName() {
-            const name = document.getElementById('player-name').value.trim();
-            if(name.length > 1) {
-                localStorage.setItem('quiz_username', name);
-                showSelection();
-            }
+        <div class="features" aria-hidden="true">
+          <div class="pill">Neon Space</div>
+          <div class="pill">Hero Comic</div>
+          <div class="pill">Boss‑Runden</div>
+          <div class="pill">Joker System</div>
+        </div>
+
+        <div class="intro">
+          Willkommen Agent. Gib deinen Spielernamen ein und wähle dein Design. Deine Auswahl und der zuletzt geladene Frage‑Datensatz werden lokal gespeichert. Beim ersten Start zeigen wir kurz die wichtigsten Regeln — danach nie wieder.
+        </div>
+
+        <div class="footer" aria-hidden="true">Design überarbeitet · High‑End UI · Supabase Highscores (optional)</div>
+      </section>
+
+      <!-- CONTROLS / RIGHT -->
+      <aside class="panel" aria-labelledby="controlsTitle">
+        <h3 id="controlsTitle">Start Mission</h3>
+
+        <div class="field" role="group" aria-label="Spielername">
+          <label for="playerName" style="font-weight:800;color:var(--muted);font-size:0.85rem">Dein Name</label>
+          <input id="playerName" class="input" type="text" maxlength="14" placeholder="DEIN NAME..." aria-describedby="nameHelp" />
+          <div id="nameHelp" style="font-size:0.82rem;color:var(--muted)">Wird lokal gespeichert und im Ranking verwendet.</div>
+        </div>
+
+        <div class="field" role="group" aria-label="Design wählen" style="margin-top:18px">
+          <label style="font-weight:800;color:var(--muted);font-size:0.85rem">Design wählen</label>
+          <div class="row" id="themeRow" role="list">
+            <div class="theme-card" role="listitem" data-theme="space" tabindex="0" aria-pressed="false">
+              <div class="emoji">🚀</div>
+              <div class="label">Neon Space</div>
+              <div style="font-size:0.78rem;color:var(--muted);margin-top:6px">Pulsierendes Neon, Partikel & Parallax</div>
+            </div>
+
+            <div class="theme-card" role="listitem" data-theme="comic" tabindex="0" aria-pressed="false">
+              <div class="emoji">💥</div>
+              <div class="label">Hero Comic</div>
+              <div style="font-size:0.78rem;color:var(--muted);margin-top:6px">Fette Outlines, Halftone & Pop‑Panels</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="meta" aria-hidden="false">
+          <div>Letzte Datei: <strong id="lastFile">—</strong></div>
+          <div id="statusMsg" style="opacity:0.9">Bereit</div>
+        </div>
+
+        <div class="cta">
+          <button id="startBtn" class="btn-primary" aria-label="Mission starten">START MISSION</button>
+          <button id="changeNameBtn" class="btn-ghost" aria-label="Name ändern">Name ändern</button>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Onboarding overlay (shown once) -->
+  <div id="onboard" class="onboard" role="dialog" aria-modal="true" aria-labelledby="onboardTitle">
+    <div class="onboard-card">
+      <h2 id="onboardTitle">Kurzinfo</h2>
+      <p>
+        Willkommen bei Quiz Pulse 2.0. Regeln in Kürze:
+        <ul style="margin:8px 0 0 18px;line-height:1.45;color:rgba(255,255,255,0.85)">
+          <li>Wähle ein Design (Space oder Comic) und lade im Spiel deine Fragen‑Excel.</li>
+          <li>Jede Kategorie kann pro Durchgang maximal 2× gewählt werden.</li>
+          <li>Boss‑Runden erscheinen alle 4 Runden; Joker sind wählbar und abwählbar.</li>
+          <li>Highscores werden lokal gespeichert und optional in die Cloud (Supabase) gesendet.</li>
+        </ul>
+      </p>
+      <div class="ok">
+        <button id="onboardOk" class="btn-primary">Alles klar — starten</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* -------------------------
+       Hub logic: name + theme selection + onboarding
+       ------------------------- */
+
+    const playerNameInput = document.getElementById('playerName');
+    const startBtn = document.getElementById('startBtn');
+    const changeNameBtn = document.getElementById('changeNameBtn');
+    const themeRow = document.getElementById('themeRow');
+    const lastFileEl = document.getElementById('lastFile');
+    const statusMsg = document.getElementById('statusMsg');
+    const onboard = document.getElementById('onboard');
+    const onboardOk = document.getElementById('onboardOk');
+
+    // restore stored values
+    const storedName = localStorage.getItem('quiz_username') || '';
+    const storedTheme = localStorage.getItem('quiz_theme') || '';
+    const storedFile = localStorage.getItem('quiz_active_file') || '';
+    if(storedName) playerNameInput.value = storedName;
+    if(storedFile) lastFileEl.textContent = storedFile; else lastFileEl.textContent = 'Keine Datei';
+
+    // onboarding: show once per user (persist flag)
+    const onboardSeen = localStorage.getItem('quiz_onboard_seen');
+    if(!onboardSeen){
+      setTimeout(()=> onboard.classList.add('show'), 220);
+    }
+
+    onboardOk.addEventListener('click', ()=>{
+      localStorage.setItem('quiz_onboard_seen', '1');
+      onboard.classList.remove('show');
+    });
+
+    // theme selection UI
+    let selectedTheme = storedTheme || null;
+    function renderThemeSelection(){
+      document.querySelectorAll('.theme-card').forEach(card=>{
+        const theme = card.dataset.theme;
+        const pressed = (theme === selectedTheme);
+        card.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+        card.style.borderColor = pressed ? 'rgba(162,155,254,0.95)' : 'rgba(255,255,255,0.04)';
+        card.style.boxShadow = pressed ? '0 20px 60px rgba(108,92,231,0.18)' : '';
+        card.style.transform = pressed ? 'translateY(-6px) scale(1.02)' : '';
+      });
+    }
+    renderThemeSelection();
+
+    themeRow.addEventListener('click', (e)=>{
+      const card = e.target.closest('.theme-card');
+      if(!card) return;
+      const theme = card.dataset.theme;
+      if(selectedTheme === theme) selectedTheme = null;
+      else selectedTheme = theme;
+      renderThemeSelection();
+    });
+
+    // keyboard accessibility for theme cards
+    document.querySelectorAll('.theme-card').forEach(card=>{
+      card.addEventListener('keydown', (ev)=>{
+        if(ev.key === 'Enter' || ev.key === ' ') {
+          ev.preventDefault();
+          card.click();
         }
-        function showSelection() {
-            document.getElementById('login-area').style.display = 'none';
-            document.getElementById('selection-area').style.display = 'flex';
+      });
+    });
+
+    // start mission
+    startBtn.addEventListener('click', ()=>{
+      const name = playerNameInput.value.trim();
+      if(!name || name.length < 2){
+        statusMsg.textContent = 'Bitte gib einen Namen mit mindestens 2 Zeichen ein.';
+        statusMsg.style.color = 'rgba(255,120,120,0.95)';
+        playerNameInput.focus();
+        return;
+      }
+      if(!selectedTheme){
+        statusMsg.textContent = 'Bitte wähle ein Design (Space oder Comic).';
+        statusMsg.style.color = 'rgba(255,200,120,0.95)';
+        return;
+      }
+
+      // persist
+      localStorage.setItem('quiz_username', name);
+      localStorage.setItem('quiz_theme', selectedTheme);
+
+      // subtle success animation
+      startBtn.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-6px)' }, { transform: 'translateY(0)' }], { duration: 420, easing: 'cubic-bezier(.2,.9,.2,1)' });
+
+      // redirect to chosen theme page
+      const target = selectedTheme === 'space' ? 'space.html' : 'comic.html';
+      // small delay for micro-interaction
+      setTimeout(()=> {
+        window.location.href = target;
+      }, 260);
+    });
+
+    // change name: clears stored name and focuses input
+    changeNameBtn.addEventListener('click', ()=>{
+      localStorage.removeItem('quiz_username');
+      playerNameInput.value = '';
+      playerNameInput.focus();
+      statusMsg.textContent = 'Name zurückgesetzt.';
+      statusMsg.style.color = 'rgba(255,255,255,0.9)';
+    });
+
+    /* -------------------------
+       Decorative: animated starfield (canvas)
+       lightweight, high-end subtle effect
+       ------------------------- */
+    (function initStars(){
+      const canvas = document.getElementById('starsCanvas');
+      if(!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let w = canvas.width = innerWidth;
+      let h = canvas.height = innerHeight;
+      const stars = [];
+      const STAR_COUNT = Math.floor((w*h)/60000) + 40;
+
+      function rand(min,max){ return Math.random()*(max-min)+min; }
+
+      for(let i=0;i<STAR_COUNT;i++){
+        stars.push({
+          x: Math.random()*w,
+          y: Math.random()*h,
+          r: rand(0.3,1.6),
+          vx: rand(-0.02,0.02),
+          vy: rand(-0.02,0.02),
+          alpha: rand(0.06,0.22),
+          twinkle: Math.random()*Math.PI*2
+        });
+      }
+
+      function resize(){ w = canvas.width = innerWidth; h = canvas.height = innerHeight; }
+      addEventListener('resize', resize);
+
+      let last = performance.now();
+      function frame(now){
+        const dt = Math.min(40, now - last);
+        last = now;
+        ctx.clearRect(0,0,w,h);
+        for(const s of stars){
+          s.x += s.vx * dt;
+          s.y += s.vy * dt;
+          s.twinkle += 0.02 * (dt/16);
+          if(s.x < -10) s.x = w+10;
+          if(s.x > w+10) s.x = -10;
+          if(s.y < -10) s.y = h+10;
+          if(s.y > h+10) s.y = -10;
+          const a = s.alpha + Math.sin(s.twinkle)*0.06;
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(255,255,255,${a})`;
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+          ctx.fill();
         }
-        function clearName() { localStorage.removeItem('quiz_username'); location.reload(); }
-        function toggleHelp(show) { document.getElementById('help-modal').style.display = show ? 'flex' : 'none'; }
-        window.onload = () => { if(localStorage.getItem('quiz_username')) showSelection(); }
-    </script>
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    })();
+
+    /* -------------------------
+       Accessibility: focus outline for keyboard users
+       ------------------------- */
+    (function focusOutline(){
+      function handleFirstTab(e){
+        if(e.key === 'Tab'){
+          document.body.classList.add('user-is-tabbing');
+          window.removeEventListener('keydown', handleFirstTab);
+        }
+      }
+      window.addEventListener('keydown', handleFirstTab);
+      const style = document.createElement('style');
+      style.innerHTML = `
+        .user-is-tabbing .theme-card:focus, .user-is-tabbing .input:focus, .user-is-tabbing .btn-primary:focus { outline: 3px solid rgba(108,92,231,0.22); outline-offset: 4px; border-radius:12px; }
+      `;
+      document.head.appendChild(style);
+    })();
+
+    /* -------------------------
+       Small UX polish: preselect theme if stored
+       ------------------------- */
+    (function preselectStored(){
+      const st = localStorage.getItem('quiz_theme');
+      if(st){
+        selectedTheme = st;
+        renderThemeSelection();
+      }
+    })();
+
+  </script>
 </body>
 </html>
