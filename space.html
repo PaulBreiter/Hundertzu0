@@ -3,363 +3,290 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>POINT ZERO | Space-Edition</title>
+    <title>SPACE QUIZ | Neon Mission</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap');
-        
-        :root { 
-            --bg: #030305; --surface: #0f111a; --accent: #ff0055; 
-            --gold: #ffcc00; --blue: #00d4ff; --green: #00ff88; --text: #e0e0e5; 
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Orbitron', 'Rajdhani', monospace;
+            background: #0a0c15;
+            margin: 0;
+            padding: 20px;
+            color: #e2e8f0;
         }
-
-        body { 
-            font-family: 'Rajdhani', sans-serif; background: var(--bg); color: var(--text); 
-            margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; 
+        .app-container { max-width: 1300px; margin: 0 auto; }
+        .header-stats {
+            background: #0f111a;
+            border-radius: 28px;
+            padding: 16px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #2d3748;
+            box-shadow: 0 0 12px rgba(0,255,255,0.1);
         }
-
-        #ui-top { position: sticky; top: 0; width: 100%; max-width: 600px; padding: 15px; z-index: 1000; box-sizing: border-box; background: var(--bg); }
-
-        .status-container { 
-            background: var(--surface); border: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 20px; padding: 15px; display: flex; 
-            justify-content: space-between; align-items: center; 
+        .player-info span {
+            background: #1a1f2e;
+            padding: 6px 14px;
+            border-radius: 40px;
+            margin-right: 12px;
         }
-
-        .hp-bar-bg { height: 6px; background: #222; border-radius: 3px; margin-top: 8px; overflow: hidden; }
-        #hp-bar-fill { height: 100%; background: var(--accent); width: 100%; transition: 0.5s; }
-        .hp-text { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: var(--accent); }
-
-        .joker-row { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
-        .joker-box { 
-            background: #1a1c26; border: 1px solid #333; border-radius: 12px; 
-            width: 45px; height: 45px; display: flex; align-items: center; 
-            justify-content: center; font-size: 1.2rem; cursor: pointer; 
+        .hp-bar-bg {
+            width: 150px;
+            height: 10px;
+            background: #2d3748;
+            border-radius: 10px;
+            overflow: hidden;
         }
-        .joker-box.active { border-color: var(--blue); box-shadow: 0 0 15px var(--blue); }
-        .joker-box.used { opacity: 0.1; filter: grayscale(1); pointer-events: none; }
-
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 92%; max-width: 1000px; padding-bottom: 120px; }
-
-        .card { background: var(--surface); border-radius: 16px; padding: 20px 10px; border: 1px solid rgba(255,255,255,0.05); text-align: center; cursor: pointer; }
-        .card.disabled { opacity: 0.2; cursor: not-allowed; }
-
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-
-        .modal-2 { background: var(--surface); width: 85%; max-width: 400px; padding: 25px; border-radius: 20px; border: 1px solid #333; text-align: center; transition: 0.2s ease-in-out; }
-
-        .btn-confirm { background: var(--accent); color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; font-family: 'Orbitron'; cursor: pointer; margin-top: 10px; }
-
-        footer { position: fixed; bottom: 15px; width: 95%; max-width: 600px; display: flex; gap: 5px; }
-
-        .btn-nav { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 12px 5px; border-radius: 10px; color: #aaa; font-size: 0.6rem; font-weight: bold; text-transform: uppercase; cursor: pointer; }
-
-        input { background: #000; border: 2px solid #333; color: var(--blue); padding: 12px; border-radius: 10px; width: 80%; text-align: center; font-family: 'Orbitron'; font-size: 1rem; margin: 8px 0; }
-        .double-input { display: flex; gap: 12px; justify-content: center; }
-        .double-input input { width: 40%; }
-
-        .score-row { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #222; font-family: 'Orbitron'; font-size: 0.7rem; }
-
-        .shake { animation: shake 0.4s ease-in-out; border-color: var(--accent) !important; }
-        @keyframes shake {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            50% { transform: translateX(10px); }
-            75% { transform: translateX(-10px); }
-            100% { transform: translateX(0); }
+        #hp-bar-fill { height: 100%; background: #00ff88; }
+        .boss-badge { background: #ff0055; padding: 6px 18px; border-radius: 40px; font-weight: bold; }
+        .joker-row { display: flex; gap: 15px; justify-content: center; margin-bottom: 25px; }
+        .joker-box {
+            background: #0f111a;
+            border: 1px solid #4a5568;
+            border-radius: 60px;
+            padding: 10px 25px;
+            cursor: pointer;
         }
-
-        .winner { animation: celebrate 0.6s ease-in-out; }
-        @keyframes celebrate {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); border-color: var(--green); box-shadow: 0 0 20px var(--green); }
-            100% { transform: scale(1); }
+        .joker-box.active { border-color: #00d4ff; box-shadow: 0 0 12px #00d4ff; }
+        .joker-box.used { opacity: 0.3; pointer-events: none; }
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
         }
-
-        .guide-text { text-align: left; font-size: 0.9rem; line-height: 1.5; color: #ccc; margin-bottom: 15px; }
-        .guide-text ul { padding-left: 20px; margin-top: 5px; }
-        .guide-text li { margin-bottom: 8px; }
+        .category-card {
+            background: #0f111a;
+            border-radius: 28px;
+            padding: 20px;
+            border: 1px solid #2d3748;
+        }
+        .category-card.disabled { opacity: 0.4; filter: grayscale(0.5); }
+        .category-title { font-size: 1.4rem; font-weight: bold; display: flex; justify-content: space-between; }
+        .btn-waehlen {
+            background: #00d4ff;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 50px;
+            font-weight: bold;
+            color: #000;
+            cursor: pointer;
+        }
+        .footer-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+        .btn-footer {
+            background: #0f111a;
+            border: 1px solid #4a5568;
+            padding: 10px 24px;
+            border-radius: 40px;
+            cursor: pointer;
+            color: white;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-card {
+            background: #0f111a;
+            border: 1px solid #00d4ff;
+            border-radius: 32px;
+            padding: 28px;
+            max-width: 500px;
+            width: 90%;
+        }
+        input, .double-input input {
+            background: #1a1f2e;
+            border: 1px solid #4a5568;
+            border-radius: 60px;
+            padding: 14px;
+            width: 100%;
+            color: white;
+            text-align: center;
+        }
+        .btn-primary {
+            background: #ff0055;
+            border: none;
+            padding: 14px;
+            border-radius: 60px;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 12px;
+            cursor: pointer;
+        }
+        @keyframes shake { /* gleiche wie comic */ 0%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} 100%{transform:translateX(0)} }
+        .shake { animation: shake 0.3s ease; }
+        @keyframes celebrate { 0%{transform:scale(1)} 50%{transform:scale(1.03); border-color:#00ff88} 100%{transform:scale(1)} }
+        .winner { animation: celebrate 0.5s ease; }
     </style>
 </head>
 <body>
-
-    <div id="ui-top">
-        <div class="status-container">
-            <div style="flex-grow: 1;">
-                <div style="font-size: 0.6rem; color: #666;">
-                    PILOT: <span id="pilot-display" style="color:var(--blue)">...</span> | 
-                    MISSION: <span id="q-count">0</span>/20 | 
-                    PUNKTE: <span id="current-score" style="color:var(--green)">0</span>
-                </div>
-                <div class="hp-text" id="hp-val">100</div>
-                <div class="hp-bar-bg"><div id="hp-bar-fill"></div></div>
-            </div>
-            <div style="text-align: center; margin-left: 15px;">
-                <div style="font-size: 0.5rem; color: #666;">BOSS</div>
-                <div id="boss-circle" style="border: 2px solid var(--gold); border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; color: var(--gold); font-family: 'Orbitron';">4</div>
-            </div>
+<div class="app-container">
+    <div class="header-stats">
+        <div class="player-info">
+            <span>👨‍🚀 <span id="player-display">Pilot</span></span>
+            <span>📡 RUNDE <span id="q-count">0</span>/20</span>
+            <span>⚡ PUNKTE <span id="current-score">0</span></span>
         </div>
-        <div class="joker-row">
-            <div class="joker-box" id="j-Schild" onclick="useJoker('Schild')">🛡️</div>
-            <div class="joker-box" id="j-Schwert" onclick="useJoker('Schwert')">⚔️</div>
-            <div class="joker-box" id="j-Lebenstrank" onclick="useJoker('Lebenstrank')">🧪</div>
-        </div>
+        <div><span>❤️ <span id="hp-val">100</span></span> <div class="hp-bar-bg"><div id="hp-bar-fill"></div></div></div>
+        <div class="boss-badge">⚠️ BOSS in <span id="boss-circle">4</span></div>
     </div>
+    <div class="joker-row">
+        <div class="joker-box" id="j-Schild" onclick="useJoker('Schild')">🛡️ SCHILD</div>
+        <div class="joker-box" id="j-Schwert" onclick="useJoker('Schwert')">⚔️ SCHWERT</div>
+        <div class="joker-box" id="j-Lebenstrank" onclick="useJoker('Lebenstrank')">🧪 TRANK</div>
+    </div>
+    <div id="categories-container" class="categories-grid"></div>
+    <div class="footer-buttons">
+        <button class="btn-footer" onclick="window.location.href='index.html'">🏠 HOME</button>
+        <button class="btn-footer" onclick="showRanking()">🏆 RANKING</button>
+        <button class="btn-footer" onclick="toggleModal('modal-guide', true)">📖 ANLEITUNG</button>
+        <button class="btn-footer" onclick="toggleModal('modal-setup', true)">📂 IMPORT</button>
+    </div>
+</div>
 
-    <div class="grid" id="game-grid"></div>
+<!-- Modal gleiche Struktur wie comic, aber mit Space-Farben -->
+<div id="modal-quiz" class="overlay"><div class="modal-card"><div id="m-cat-ui" style="font-size:1.2rem;">Kategorie</div><div id="m-q" style="margin:20px 0;"></div><div id="input-container"><input type="number" id="ans-input" placeholder="Antwort"></div><button class="btn-primary" id="btn-submit" onclick="checkAnswer()">PRÜFEN</button><div id="m-feedback"></div><button id="btn-next" style="display:none;" class="btn-primary" onclick="nextRound()">WEITER</button></div></div>
+<div id="modal-ranking" class="overlay"><div class="modal-card"><h2>🏆 BESTENLISTE</h2><div id="ranking-list"></div><button class="btn-primary" onclick="toggleModal('modal-ranking', false)">SCHLIESSEN</button></div></div>
+<div id="modal-setup" class="overlay"><div class="modal-card"><h2>📡 DATENIMPORT</h2><input type="file" id="excel-file" accept=".xlsx, .xls"><button class="btn-primary" onclick="processExcel()">HOCHLADEN</button></div></div>
+<div id="modal-guide" class="overlay"><div class="modal-card"><h2>📋 MISSION</h2><div style="text-align:left;"><ul><li>20 Fragen, Boss alle 4 Runden</li><li>Kategorien max. 2x wählbar</li><li>Differenz = Schaden, Volltreffer heilt</li><li>Joker: Schild (max 10 Schaden), Schwert (2 Antworten), Lebenstrank (+15 HP bei Volltreffer)</li></ul></div><button class="btn-primary" onclick="toggleModal('modal-guide', false)">START</button></div></div>
 
-    <div id="modal-quiz" class="overlay"><div class="modal-2">
-        <div id="m-cat-ui" style="color:var(--blue); font-size:0.7rem; font-family:'Orbitron'">KATEGORIE</div>
-        <div id="m-q" style="margin:20px 0; font-size:1.1rem">Frage...</div>
-        <div id="input-container">
-            <input type="number" id="ans-input" inputmode="numeric" placeholder="Deine Schätzung">
-        </div>
-        <button class="btn-confirm" id="btn-submit" onclick="checkAnswer()">SENDEN</button>
-        <div id="m-feedback" style="margin-top:15px; font-family:'Orbitron'; font-size:0.9rem;"></div>
-        <button id="btn-next" style="display:none; background:var(--green); color:#000;" class="btn-confirm" onclick="nextRound()">WEITER</button>
-    </div></div>
-
-    <div id="modal-ranking" class="overlay"><div class="modal-2">
-        <h2 style="color:var(--gold); font-family:'Orbitron'">🏆 RANKING</h2>
-        <div id="ranking-list"></div>
-        <button class="btn-confirm" onclick="toggleModal('modal-ranking', false)">ZURÜCK</button>
-    </div></div>
-
-    <div id="modal-setup" class="overlay"><div class="modal-2">
-        <h2>📡 DATENIMPORT</h2>
-        <input type="file" id="excel-file" accept=".xlsx, .xls">
-        <button class="btn-confirm" onclick="processExcel()">HOCHLADEN</button>
-    </div></div>
-
-    <div id="modal-guide" class="overlay"><div class="modal-2">
-        <h2 style="color:var(--gold); font-family:'Orbitron'">📋 MISSION BRIEFING</h2>
-        <div class="guide-text">
-            <ul>
-                <li><strong>20 Fragen</strong> – alle 4 Runden erscheint ein <strong>Boss-Sektor</strong>. Die 20. Runde ist der Endboss!</li>
-                <li><strong>Kategorien</strong>: Jede Wissensdomäne kann nur <strong>2-mal</strong> angeflogen werden.</li>
-                <li><strong>Lebenspunkte</strong>: Die Differenz deiner Schätzung wird von den HP abgezogen. Bei <strong>exaktem Treffer</strong> gibts 5 HP Reparatur.</li>
-                <li><strong>Joker (Einmalnutzung)</strong>:
-                    <ul>
-                        <li>🛡️ <strong>Schild</strong> – Begrenzt Schaden auf maximal 10.</li>
-                        <li>⚔️ <strong>Schwert</strong> – Zwei Antworten möglich; die bessere wird gewertet.</li>
-                        <li>🧪 <strong>Lebenstrank</strong> – Bei Volltreffer heilst du 15 HP statt 5.</li>
-                    </ul>
-                </li>
-                <li><strong>Aktivierung</strong>: Joker vor dem Öffnen einer Kategorie auswählen!</li>
-            </ul>
-        </div>
-        <button class="btn-confirm" onclick="toggleModal('modal-guide', false)">START</button>
-    </div></div>
-
-    <footer>
-        <button class="btn-nav" onclick="window.location.href='index.html'" style="background:rgba(255,255,255,0.1); color:white">🏠 HOME</button>
-        <button class="btn-nav" onclick="toggleModal('modal-guide', true)">📖 ANLEITUNG</button>
-        <button class="btn-nav" onclick="showRanking()">🏆 RANKING</button>
-        <button class="btn-nav" onclick="toggleModal('modal-setup', true)">📂 DATEI</button>
-    </footer>
-
-    <script>
-        const SUPABASE_URL = 'https://eaxuqsiwrfqshqkwtnlz.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_PViFkgap3gvsxBgG2NSAjA_Oc0eASzI';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        let questions = JSON.parse(localStorage.getItem('p0_v3')) || [];
-        let hp = 100, score = 0, qCounter = 0, currentIdx = null, activeJoker = null, pilotName = "";
-        let usedJokers = { Schild: false, Schwert: false, Lebenstrank: false }, categoryUsage = {};
-
-        function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
-
-        window.onload = () => {
-            pilotName = localStorage.getItem('quiz_username');
-            if(!pilotName) { window.location.href = 'index.html'; return; }
-            document.getElementById('pilot-display').innerText = pilotName;
-            if(questions.length < 5) toggleModal('modal-setup', true); 
-            else renderBoard();
+<script>
+    // Gleiche Logik wie in comic.html – aus Platzgründen hier identisch (nur Variablenname pilotName)
+    const SUPABASE_URL = 'https://eaxuqsiwrfqshqkwtnlz.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_PViFkgap3gvsxBgG2NSAjA_Oc0eASzI';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let questions = JSON.parse(localStorage.getItem('p0_v3')) || [];
+    let hp = 100, score = 0, qCounter = 0, currentIdx = null, activeJoker = null, playerName = "";
+    let usedJokers = { Schild: false, Schwert: false, Lebenstrank: false }, categoryUsage = {};
+    function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
+    window.onload = () => {
+        playerName = localStorage.getItem('quiz_username');
+        if(!playerName) { window.location.href = 'index.html'; return; }
+        document.getElementById('player-display').innerText = playerName;
+        if(questions.length < 5) toggleModal('modal-setup', true); else renderCategories();
+    };
+    async function showRanking() {
+        toggleModal('modal-ranking', true);
+        const listDiv = document.getElementById('ranking-list');
+        listDiv.innerHTML = "Lade...";
+        const { data, error } = await supabaseClient.from('highscores').select('*').order('score', { ascending: false }).limit(5);
+        if(error) listDiv.innerHTML = "Fehler"; else listDiv.innerHTML = data.map((s,i) => `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #333"><span>${i+1}. ${s.name}</span><b>${s.score} Pkt</b></div>`).join('');
+    }
+    function processExcel() {
+        const file = document.getElementById('excel-file').files[0];
+        if(!file) return alert("Bitte Datei auswählen");
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const wb = XLSX.read(data, {type: 'array'});
+            const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+            questions = json.map(r => ({ cat: r.Kategorie || "Allgemein", q: r.Frage, a: parseInt(r.Antwort), isBoss: (r.Boss && r.Boss.toString().toLowerCase() === 'ja'), used: false }));
+            localStorage.setItem('p0_v3', JSON.stringify(questions));
+            location.reload();
         };
-
-        async function showRanking() {
-            toggleModal('modal-ranking', true);
-            const list = document.getElementById('ranking-list');
-            list.innerHTML = "Sync...";
-            const { data, error } = await supabaseClient.from('highscores').select('*').order('score', { ascending: false }).limit(8);
-            list.innerHTML = error ? "Fehler" : data.map((s, i) => `<div class="score-row"><span>${i+1}. ${s.name}</span><span style="color:var(--green)">${s.score}</span></div>`).join('');
-        }
-
-        function processExcel() {
-            const file = document.getElementById('excel-file').files[0];
-            if(!file) return alert("Bitte wähle eine Excel-Datei aus.");
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const data = new Uint8Array(e.target.result);
-                const wb = XLSX.read(data, {type: 'array'});
-                const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-                questions = json.map(r => ({ cat: r.Kategorie || "Misc", q: r.Frage, a: parseInt(r.Antwort), isBoss: (r.Boss && r.Boss.toString().toLowerCase() === 'ja'), used: false }));
-                localStorage.setItem('p0_v3', JSON.stringify(questions));
-                location.reload();
+        reader.readAsArrayBuffer(file);
+    }
+    function renderCategories() {
+        const container = document.getElementById('categories-container');
+        container.innerHTML = "";
+        const nextRound = qCounter + 1;
+        if ((nextRound % 4 === 0) || (nextRound === 20)) {
+            const bossCard = document.createElement('div'); bossCard.className = "category-card"; bossCard.style.borderColor = "#ff0055";
+            bossCard.innerHTML = `<div class="category-title">🔥 BOSS-SEKTOR 🔥</div><div class="category-meta">Runde ${nextRound}</div><button class="btn-waehlen" style="background:#ff0055;">KAMPF AUFNEHMEN</button>`;
+            bossCard.querySelector('button').onclick = () => {
+                const bossList = questions.filter(q => q.isBoss && !q.used);
+                if(bossList.length === 0) { alert("Keine Boss-Daten"); const normal = questions.find(q => !q.used); if(normal) currentIdx = questions.indexOf(normal); else return; }
+                else { const randomBoss = bossList[Math.floor(Math.random() * bossList.length)]; currentIdx = questions.indexOf(randomBoss); }
+                openQuestion(questions[currentIdx]);
             };
-            reader.readAsArrayBuffer(file);
+            container.appendChild(bossCard);
         }
-
-        function renderBoard() {
-            const grid = document.getElementById('game-grid');
-            grid.innerHTML = "";
-            const nextQ = qCounter + 1;
-
-            if ((nextQ % 4 === 0) || (nextQ === 20)) {
-                const card = document.createElement('div');
-                card.className = "card"; card.style.gridColumn = "1 / -1"; card.style.borderColor = "var(--gold)";
-                card.innerHTML = `<div style="color:var(--gold); font-weight:bold;">⚠️ BOSS-SEKTOR ${nextQ} ⚠️</div>`;
-                card.onclick = () => {
-                    const bossList = questions.filter(q => q.isBoss && !q.used);
-                    if(bossList.length === 0) {
-                        alert("Keine Boss-Daten verfügbar! Normale Frage wird geladen.");
-                        const normal = questions.find(q => !q.used);
-                        if(normal) currentIdx = questions.indexOf(normal);
-                        else return;
-                    } else {
-                        const randomBoss = bossList[Math.floor(Math.random() * bossList.length)];
-                        currentIdx = questions.indexOf(randomBoss);
-                    }
-                    openQuestion(questions[currentIdx]);
-                };
-                grid.appendChild(card);
-            } else {
-                const cats = [...new Set(questions.filter(q => !q.isBoss).map(q => q.cat))];
-                cats.forEach(cat => {
-                    const u = categoryUsage[cat] || 0;
-                    const card = document.createElement('div');
-                    card.className = "card" + (u >= 2 ? " disabled" : "");
-                    card.innerHTML = `<div style="font-size:0.7rem; font-weight:bold;">${cat}</div><div style="font-size:0.5rem; color:#666; margin-top:5px;">🔁 ${u}/2</div>`;
-                    if(u < 2) card.onclick = () => {
-                        const available = questions.filter(q => q.cat === cat && !q.used);
-                        if(available.length === 0) {
-                            alert("Keine offenen Fragen in dieser Kategorie!");
-                            return;
-                        }
-                        const randomQ = available[Math.floor(Math.random() * available.length)];
-                        currentIdx = questions.indexOf(randomQ);
-                        categoryUsage[cat] = u + 1;
-                        openQuestion(questions[currentIdx]);
-                    };
-                    grid.appendChild(card);
-                });
-            }
-            updateUI();
+        const cats = [...new Set(questions.filter(q => !q.isBoss).map(q => q.cat))];
+        cats.forEach(cat => {
+            const usedCount = categoryUsage[cat] || 0;
+            const disabled = usedCount >= 2;
+            const card = document.createElement('div'); card.className = "category-card" + (disabled ? " disabled" : "");
+            card.innerHTML = `<div class="category-title"><span>${cat}</span><span>${usedCount}/2</span></div><div class="category-meta">${questions.filter(q => q.cat === cat && !q.used).length} offen</div><button class="btn-waehlen" ${disabled ? 'disabled' : ''}>🎯 WÄHLEN</button>`;
+            if(!disabled) card.querySelector('button').onclick = () => {
+                const available = questions.filter(q => q.cat === cat && !q.used);
+                if(available.length === 0) return alert("Keine Fragen mehr");
+                const randomQ = available[Math.floor(Math.random() * available.length)];
+                currentIdx = questions.indexOf(randomQ);
+                categoryUsage[cat] = usedCount + 1;
+                openQuestion(questions[currentIdx]);
+            };
+            container.appendChild(card);
+        });
+        updateUI();
+    }
+    function updateUI() {
+        document.getElementById('hp-val').innerText = hp;
+        document.getElementById('hp-bar-fill').style.width = Math.max(0, hp) + "%";
+        document.getElementById('current-score').innerText = score;
+        document.getElementById('q-count').innerText = qCounter;
+        let cd = (4 - (qCounter % 4)); if(cd === 0) cd = 4;
+        document.getElementById('boss-circle').innerText = cd;
+    }
+    function useJoker(type) { if(usedJokers[type] || activeJoker) return; activeJoker = type; document.querySelectorAll('.joker-box').forEach(b=>b.classList.remove('active')); document.getElementById('j-'+type).classList.add('active'); }
+    function openQuestion(q) {
+        document.getElementById('m-cat-ui').innerText = q.cat;
+        document.getElementById('m-q').innerText = q.q;
+        document.getElementById('m-feedback').innerHTML = "";
+        document.getElementById('btn-next').style.display = 'none';
+        document.getElementById('btn-submit').style.display = 'block';
+        const container = document.getElementById('input-container');
+        if(activeJoker === 'Schwert') container.innerHTML = `<div class="double-input"><input type="number" id="ans-input1" placeholder="1. Versuch"><input type="number" id="ans-input2" placeholder="2. Versuch"></div>`;
+        else container.innerHTML = `<input type="number" id="ans-input" placeholder="Antwort">`;
+        toggleModal('modal-quiz', true);
+    }
+    async function checkAnswer() {
+        const q = questions[currentIdx];
+        let diff = 0;
+        if(activeJoker === 'Schwert') {
+            let g1 = parseInt(document.getElementById('ans-input1')?.value), g2 = parseInt(document.getElementById('ans-input2')?.value);
+            if(isNaN(g1) && isNaN(g2)) return;
+            let d1 = isNaN(g1)?Infinity:Math.abs(g1-q.a), d2 = isNaN(g2)?Infinity:Math.abs(g2-q.a);
+            diff = Math.min(d1,d2);
+            document.getElementById('m-feedback').innerHTML = `<small>Besserer Wert: ${d1<=d2?g1:g2}</small><br>`;
+        } else { let g = parseInt(document.getElementById('ans-input')?.value); if(isNaN(g)) return; diff = Math.abs(g - q.a); }
+        if(activeJoker === 'Schild' && diff > 10) diff = 10;
+        const modalDiv = document.querySelector('#modal-quiz .modal-card');
+        if(diff === 0) {
+            let heal = (activeJoker === 'Lebenstrank') ? 15 : 5;
+            hp = Math.min(100, hp + heal);
+            score += 250;
+            modalDiv.classList.add('winner');
+            document.getElementById('m-feedback').innerHTML += `<span style="color:#00ff88;">🎯 VOLLTREFFER! +250 Punkte, +${heal} HP</span>`;
+        } else {
+            let dmg = diff;
+            hp -= dmg;
+            let points = Math.max(0, 100 - dmg);
+            score += points;
+            if(diff <= 5) document.getElementById('m-feedback').innerHTML += `<span style="color:#ffcc00;">📡 Nahe dran! -${dmg} HP, +${points} Pkt<br>Lösung: ${q.a}</span>`;
+            else { modalDiv.classList.add('shake'); document.getElementById('m-feedback').innerHTML += `<span style="color:#ff0055;">💥 Treffer! -${dmg} HP, +${points} Pkt<br>Lösung: ${q.a}</span>`; }
         }
-
-        function updateUI() {
-            document.getElementById('hp-val').innerText = hp;
-            document.getElementById('hp-bar-fill').style.width = Math.max(0, hp) + "%";
-            document.getElementById('current-score').innerText = score;
-            document.getElementById('q-count').innerText = qCounter;
-            const bossCountdown = (4 - (qCounter % 4)) === 0 ? 4 : (4 - (qCounter % 4));
-            document.getElementById('boss-circle').innerText = bossCountdown;
-        }
-
-        function useJoker(type) {
-            if(usedJokers[type] || activeJoker) return;
-            activeJoker = type;
-            document.querySelectorAll('.joker-box').forEach(b => b.classList.remove('active'));
-            document.getElementById('j-'+type).classList.add('active');
-        }
-
-        function openQuestion(q) {
-            document.getElementById('m-cat-ui').innerText = q.cat;
-            document.getElementById('m-q').innerText = q.q;
-            document.getElementById('m-feedback').innerHTML = "";
-            document.getElementById('btn-next').style.display = 'none';
-            document.getElementById('btn-submit').style.display = 'block';
-            
-            const container = document.getElementById('input-container');
-            if(activeJoker === 'Schwert') {
-                container.innerHTML = `<div class="double-input">
-                    <input type="number" id="ans-input1" inputmode="numeric" placeholder="1. Schätzung">
-                    <input type="number" id="ans-input2" inputmode="numeric" placeholder="2. Schätzung">
-                </div>`;
-            } else {
-                container.innerHTML = `<input type="number" id="ans-input" inputmode="numeric" placeholder="Deine Schätzung">`;
-            }
-            toggleModal('modal-quiz', true);
-        }
-
-        async function checkAnswer() {
-            const q = questions[currentIdx];
-            let guess1, guess2;
-            let diff = 0;
-            let isSchwert = (activeJoker === 'Schwert');
-
-            if(isSchwert) {
-                guess1 = parseInt(document.getElementById('ans-input1')?.value);
-                guess2 = parseInt(document.getElementById('ans-input2')?.value);
-                if(isNaN(guess1) && isNaN(guess2)) return alert("Mindestens eine gültige Zahl eingeben!");
-                let diff1 = isNaN(guess1) ? Infinity : Math.abs(guess1 - q.a);
-                let diff2 = isNaN(guess2) ? Infinity : Math.abs(guess2 - q.a);
-                diff = Math.min(diff1, diff2);
-                let betterGuess = (diff1 <= diff2) ? guess1 : guess2;
-                document.getElementById('m-feedback').innerHTML = `<span style="font-size:0.7rem;">(Bessere Antwort: ${betterGuess})</span><br>`;
-            } else {
-                let guess = parseInt(document.getElementById('ans-input')?.value);
-                if(isNaN(guess)) return;
-                diff = Math.abs(guess - q.a);
-            }
-            
-            const modalDiv = document.querySelector('#modal-quiz .modal-2');
-            
-            if(activeJoker === 'Schild' && diff > 10) diff = 10;
-            
-            let heal = 0;
-            let pointsGain = 0;
-            
-            if(diff === 0) {
-                if(activeJoker === 'Lebenstrank') heal = 15;
-                else heal = 5;
-                hp = Math.min(100, hp + heal);
-                pointsGain = 250;
-                score += pointsGain;
-                modalDiv.classList.add('winner');
-                document.getElementById('m-feedback').innerHTML += `<span style='color:var(--green)'>✨ VOLLTREFFER! +${pointsGain} Punkte & +${heal} HP Reparatur!</span>`;
-            } else {
-                let dmg = diff;
-                hp -= dmg;
-                pointsGain = Math.max(0, 100 - dmg);
-                score += pointsGain;
-                if(diff <= 5) {
-                    document.getElementById('m-feedback').innerHTML += `<span style='color:var(--blue)'>📡 GUTE SCHÄTZUNG! -${dmg} HP | +${pointsGain} Punkte<br>Lösung: ${q.a}</span>`;
-                } else {
-                    modalDiv.classList.add('shake');
-                    document.getElementById('m-feedback').innerHTML += `<span style='color:var(--accent)'>💥 EINSCHLAG! -${dmg} HP | +${pointsGain} Punkte<br>Lösung: ${q.a}</span>`;
-                }
-            }
-            
-            setTimeout(() => { modalDiv.classList.remove('shake', 'winner'); }, 600);
-            if(activeJoker) {
-                usedJokers[activeJoker] = true;
-                document.getElementById('j-'+activeJoker).classList.remove('active');
-                document.getElementById('j-'+activeJoker).classList.add('used');
-                activeJoker = null;
-            }
-            q.used = true;
-            qCounter++;
-            document.getElementById('btn-submit').style.display = 'none';
-            document.getElementById('btn-next').style.display = 'block';
-            updateUI();
-        }
-
-        async function nextRound() {
-            toggleModal('modal-quiz', false);
-            if(hp <= 0) {
-                alert(`💀 MISSION FEHLGESCHLAGEN! Keine HP mehr.\nEndergebnis: ${score} Punkte`);
-                if(score > 0) await supabaseClient.from('highscores').insert([{ name: pilotName, score: score }]);
-                location.reload();
-            } else if(qCounter >= 20) {
-                alert(`🏆 MISSION ERFOLGREICH! Du hast alle 20 Fragen überlebt.\nEndstand: ${score} Punkte 🏆`);
-                if(score > 0) await supabaseClient.from('highscores').insert([{ name: pilotName, score: score }]);
-                location.reload();
-            } else {
-                renderBoard();
-            }
-        }
-    </script>
+        setTimeout(()=>modalDiv.classList.remove('shake','winner'),500);
+        if(activeJoker) { usedJokers[activeJoker]=true; document.getElementById('j-'+activeJoker).classList.remove('active'); document.getElementById('j-'+activeJoker).classList.add('used'); activeJoker=null; }
+        q.used=true; qCounter++;
+        document.getElementById('btn-submit').style.display='none'; document.getElementById('btn-next').style.display='block';
+        updateUI();
+    }
+    async function nextRound() {
+        toggleModal('modal-quiz', false);
+        if(hp<=0) { alert(`💀 GAME OVER – ${score} Punkte`); if(score>0) await supabaseClient.from('highscores').insert([{name:playerName, score}]); location.reload(); }
+        else if(qCounter>=20) { alert(`🏆 GESCHAFFT! ${score} Punkte`); if(score>0) await supabaseClient.from('highscores').insert([{name:playerName, score}]); location.reload(); }
+        else renderCategories();
+    }
+</script>
 </body>
 </html>
