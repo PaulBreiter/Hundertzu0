@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>SPACE QUIZ | Boss-Automatik</title>
+    <title>SPACE QUIZ | Neon Boss</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -16,7 +16,6 @@
             color: #e2e8f0;
         }
         .app-container { max-width: 1400px; margin: 0 auto; }
-        /* Kopfbereich */
         .header-stats {
             background: #0f111a;
             border-radius: 32px;
@@ -36,8 +35,7 @@
         .hp-bar-bg { width: 130px; height: 10px; background: #2d3748; border-radius: 20px; overflow: hidden; }
         #hp-bar-fill { height: 100%; background: #00ff88; transition: 0.3s; }
         .boss-badge { background: #ff0055; padding: 5px 16px; border-radius: 40px; font-weight: bold; font-size: 0.75rem; }
-        .file-badge { background: #1a1f2e; padding: 5px 12px; border-radius: 40px; font-size: 0.65rem; border: 1px solid #4a5568; white-space: nowrap; overflow-x: auto; max-width: 200px; }
-        /* Joker */
+        .file-badge { background: #1a1f2e; padding: 5px 12px; border-radius: 40px; font-size: 0.65rem; border: 1px solid #4a5568; white-space: nowrap; overflow-x: auto; max-width: 220px; }
         .joker-row { display: flex; gap: 12px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap; }
         .joker-box {
             background: #0f111a; border: 1px solid #4a5568; border-radius: 60px;
@@ -46,7 +44,6 @@
         }
         .joker-box.active { border-color: #00d4ff; box-shadow: 0 0 15px #00d4ff; transform: scale(0.96); }
         .joker-box.used { opacity: 0.3; pointer-events: none; }
-        /* Kategorien-Grid – für mobile optimiert */
         .categories-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -57,9 +54,14 @@
             background: #0f111a;
             border-radius: 28px;
             padding: 20px 16px;
-            border: 1px solid #2d3748;
             transition: 0.2s;
             cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 180px;
+            border-width: 2px;
+            border-style: solid;
         }
         .category-card.disabled { opacity: 0.4; filter: grayscale(0.5); cursor: not-allowed; }
         .category-title { font-size: 1.3rem; font-weight: bold; display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
@@ -75,45 +77,30 @@
             color: #000;
             cursor: pointer;
             transition: 0.2s;
+            margin-top: auto;
         }
         .btn-waehlen:active { transform: scale(0.97); }
-        /* Fußzeile */
         .footer-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
         .btn-footer {
             background: #0f111a; border: 1px solid #4a5568; padding: 10px 20px;
             border-radius: 50px; cursor: pointer; color: white; font-weight: bold; font-size: 0.75rem;
         }
-        /* Modals */
         .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; padding: 16px; }
         .modal-card { background: #0f111a; border: 1px solid #00d4ff; border-radius: 48px; padding: 28px 20px; max-width: 500px; width: 100%; text-align: center; }
         input, .double-input input { background: #1a1f2e; border: 1px solid #4a5568; border-radius: 60px; padding: 12px 16px; width: 100%; color: white; text-align: center; margin: 8px 0; font-size: 1rem; }
         .double-input { display: flex; gap: 12px; flex-wrap: wrap; }
         .btn-primary { background: #ff0055; border: none; padding: 12px; border-radius: 60px; font-weight: bold; width: 100%; margin-top: 12px; cursor: pointer; font-size: 1rem; }
         .ranking-entry { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #333; }
-        /* Boss-Animation */
         @keyframes bossPulseNeon {
             0% { transform: scale(1); border-color: #ff0055; box-shadow: 0 0 0 0 rgba(255,0,85,0.7); }
             50% { transform: scale(1.02); border-color: #ff00aa; box-shadow: 0 0 0 15px rgba(255,0,85,0); }
             100% { transform: scale(1); border-color: #ff0055; box-shadow: 0 0 0 0 rgba(255,0,85,0); }
         }
-        .boss-modal {
-            animation: bossPulseNeon 0.8s ease-in-out;
-            border: 3px solid #ff0055;
-        }
-        @keyframes shake {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-8px); }
-            75% { transform: translateX(8px); }
-            100% { transform: translateX(0); }
-        }
+        .boss-modal { animation: bossPulseNeon 0.8s ease-in-out; border: 3px solid #ff0055; }
+        @keyframes shake { 0%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} 100%{transform:translateX(0)} }
         .shake { animation: shake 0.3s ease; }
-        @keyframes celebrate {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); border-color: #00ff88; box-shadow: 0 0 20px #00ff88; }
-            100% { transform: scale(1); }
-        }
+        @keyframes celebrate { 0%{transform:scale(1)} 50%{transform:scale(1.02); border-color:#00ff88; box-shadow:0 0 20px #00ff88;} 100%{transform:scale(1)} }
         .winner { animation: celebrate 0.5s ease; }
-        /* Mobile */
         @media (max-width: 600px) {
             body { padding: 12px; }
             .category-title { font-size: 1.1rem; }
@@ -185,6 +172,24 @@
         document.getElementById('file-indicator').innerText = `📡 ${text}`;
     }
 
+    // Neon-Farben pro Kategorie
+    function getNeonColor(cat) {
+        const c = cat.toLowerCase();
+        if(c.includes("flora") || c.includes("fauna") || c.includes("natur") || c.includes("tier")) return "#00ff88";
+        if(c.includes("geo") || c.includes("erde") || c.includes("welt")) return "#00d4ff";
+        if(c.includes("geschicht") || c.includes("histor")) return "#ffaa00";
+        if(c.includes("technik") || c.includes("physik") || c.includes("wissen") || c.includes("computer")) return "#b266ff";
+        if(c.includes("kunst") || c.includes("architektur")) return "#ff66cc";
+        if(c.includes("film") || c.includes("kino") || c.includes("tv")) return "#ffcc00";
+        if(c.includes("musik") || c.includes("bühne")) return "#00ffcc";
+        if(c.includes("sprache") || c.includes("literatur")) return "#ff9933";
+        if(c.includes("politik") || c.includes("handel")) return "#cccccc";
+        if(c.includes("religion") || c.includes("philosophie")) return "#ff6600";
+        if(c.includes("sport")) return "#ff3366";
+        if(c.includes("medizin") || c.includes("wissenschaft")) return "#33ff99";
+        return "#00d4ff";
+    }
+
     function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
 
     window.onload = () => {
@@ -224,7 +229,6 @@
         reader.readAsArrayBuffer(file);
     }
 
-    // Boss-Automatik
     function checkAndStartBossRound() {
         const nextRound = qCounter + 1;
         const isBossRound = (nextRound % 4 === 0) || (nextRound === 20);
@@ -254,19 +258,22 @@
 
     function renderCategories() {
         if(checkAndStartBossRound()) return;
-        
         const container = document.getElementById('categories-container');
         container.innerHTML = "";
-        
         const cats = [...new Set(questions.filter(q => !q.isBoss).map(q => q.cat))];
         cats.forEach(cat => {
             const usedCount = categoryUsage[cat] || 0;
             const disabled = usedCount >= 2;
+            const neon = getNeonColor(cat);
             const card = document.createElement('div');
             card.className = "category-card" + (disabled ? " disabled" : "");
+            card.style.borderColor = neon;
+            card.style.boxShadow = `0 0 8px ${neon}`;
             card.innerHTML = `
-                <div class="category-title"><span>${cat}</span><span>${usedCount}/2</span></div>
-                <div class="category-meta">📡 ${questions.filter(q => q.cat === cat && !q.used).length} offen</div>
+                <div>
+                    <div class="category-title"><span>${cat}</span><span>${usedCount}/2</span></div>
+                    <div class="category-meta">📡 ${questions.filter(q => q.cat === cat && !q.used).length} offen</div>
+                </div>
                 <button class="btn-waehlen" ${disabled ? 'disabled' : ''}>🎯 WÄHLEN</button>
             `;
             if(!disabled) {
@@ -356,7 +363,7 @@
     async function nextRound() {
         toggleModal('modal-quiz', false);
         if(hp<=0) { alert(`💀 MISSION FEHLGESCHLAGEN! ${score} Punkte.`); if(score>0) await supabaseClient.from('highscores').insert([{name:playerName, score}]); location.reload(); }
-        else if(qCounter>=20) { alert(`🏆 ENDBOSS BESIEGT! Mission erfolgreich! ${score} Punkte.`); if(score>0) await supabaseClient.from('highscores').insert([{name:playerName, score}]); location.reload(); }
+        else if(qCounter>=20) { alert(`🏆 ENDBOSS BESIEGT! ${score} Punkte.`); if(score>0) await supabaseClient.from('highscores').insert([{name:playerName, score}]); location.reload(); }
         else renderCategories();
     }
 </script>
