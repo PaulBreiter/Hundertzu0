@@ -3,120 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QUIZ HUB | Login</title>
+    <title>QUIZ HUB 2.0 | Login</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Orbitron:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Orbitron:wght@700&display=swap');
         
         body { 
-            margin: 0; padding: 0; min-height: 100vh; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            background: #0f0c29; color: white; font-family: 'Segoe UI', sans-serif;
-            background-image: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            background: #020205; color: white; font-family: 'Montserrat', sans-serif; overflow: hidden;
         }
+
+        /* Hintergrund-Animation */
+        .bg-glow {
+            position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(108, 92, 231, 0.2) 0%, transparent 70%);
+            filter: blur(50px); z-index: -1; animation: move 20s infinite alternate;
+        }
+        @keyframes move { from { transform: translate(-50%, -50%); } to { transform: translate(50%, 50%); } }
 
         .login-box {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 40px; border-radius: 30px; text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); max-width: 400px; width: 90%;
+            background: rgba(255, 255, 255, 0.03); padding: 50px; border-radius: 40px; text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5); width: 90%; max-width: 400px;
         }
-
-        h1 { font-family: 'Montserrat', sans-serif; font-size: 1.5rem; margin-bottom: 20px; letter-spacing: 2px; }
 
         input {
-            width: 80%; padding: 15px; border-radius: 15px; border: 2px solid #6c5ce7;
-            background: #000; color: #fff; font-size: 1.2rem; text-align: center;
-            margin-bottom: 20px; font-family: 'Montserrat', sans-serif; outline: none;
-        }
-        input:focus { box-shadow: 0 0 15px #6c5ce7; }
-
-        .container { 
-            display: none; gap: 20px; flex-wrap: wrap; 
-            justify-content: center; padding: 20px; animation: fadeIn 0.5s;
+            width: 100%; padding: 18px; border-radius: 20px; border: 2px solid #6c5ce7;
+            background: rgba(0,0,0,0.5); color: #fff; font-size: 1.2rem; text-align: center;
+            margin-bottom: 25px; font-family: 'Montserrat', sans-serif; box-sizing: border-box;
         }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .container { display: none; gap: 30px; justify-content: center; flex-wrap: wrap; animation: zoomIn 0.4s ease; }
+        @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         .card { 
-            width: 260px; height: 320px; border-radius: 25px; 
-            text-decoration: none; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; transition: 0.3s; 
-            border: 4px solid rgba(255,255,255,0.1); text-align: center; 
+            width: 240px; height: 320px; border-radius: 35px; text-decoration: none; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            border: 2px solid rgba(255,255,255,0.1); position: relative; overflow: hidden;
         }
 
-        .space { background: #030305; border-color: #ff0055; }
-        .space:hover { transform: translateY(-10px); box-shadow: 0 0 30px #ff0055; }
-        .space h2 { font-family: 'Orbitron', sans-serif; color: #ff0055; margin-top: 15px; }
-
-        .comic { background: white; border-color: #2d3436; }
-        .comic:hover { transform: translateY(-10px); box-shadow: 0 0 30px #6c5ce7; }
-        .comic h2 { font-family: 'Montserrat', sans-serif; color: #6c5ce7; margin-top: 15px; }
+        .space { background: #050508; color: #00d4ff; }
+        .space:hover { transform: translateY(-15px); box-shadow: 0 0 40px #00d4ff; border-color: #00d4ff; }
+        .comic { background: #ffffff; color: #6c5ce7; }
+        .comic:hover { transform: translateY(-15px); box-shadow: 0 0 40px #6c5ce7; border-color: #6c5ce7; }
 
         .btn-primary {
-            background: #6c5ce7; color: white; border: none;
-            padding: 15px 30px; border-radius: 50px; font-weight: bold;
-            cursor: pointer; font-family: 'Montserrat', sans-serif; width: 100%; transition: 0.3s;
+            background: linear-gradient(90deg, #6c5ce7, #a29bfe); color: white; border: none;
+            padding: 18px; border-radius: 20px; font-weight: 900; cursor: pointer; width: 100%; transition: 0.3s;
         }
-        .btn-primary:hover { background: #81ecec; color: #000; }
-
-        .change-name {
-            margin-top: 30px; background: none; border: none; 
-            color: rgba(255,255,255,0.4); cursor: pointer; text-decoration: underline; width: 100%;
-        }
+        .btn-primary:hover { transform: scale(1.05); box-shadow: 0 10px 20px rgba(108,92,231,0.4); }
     </style>
 </head>
 <body>
-
+    <div class="bg-glow"></div>
+    
     <div id="login-area" class="login-box">
-        <h1>SPIELER REGISTRIEREN</h1>
-        <input type="text" id="player-name" placeholder="DEIN NAME..." maxlength="15">
-        <button class="btn-primary" onclick="saveName()">STARTEN</button>
+        <h1 style="font-size: 1.8rem; margin-bottom: 30px;">PILOT IDENTIFIKATION</h1>
+        <input type="text" id="player-name" placeholder="RUFNAME..." maxlength="12">
+        <button class="btn-primary" onclick="saveName()">ENTRY</button>
     </div>
 
     <div id="selection-area" class="container">
-        <h1 style="width:100%; text-align:center; font-family:'Montserrat', sans-serif;">WÄHLE DEIN DESIGN</h1>
-        
+        <h1 style="width:100%; text-align:center; font-size: 2.2rem;">MODE SELECT</h1>
         <a href="space.html" class="card space">
-            <span style="font-size: 4rem;">🚀</span>
-            <h2>SPACE MODE</h2>
+            <span style="font-size: 5rem;">🛸</span>
+            <h2 style="font-family:'Orbitron'">NEON SPACE</h2>
         </a>
-
         <a href="comic.html" class="card comic">
-            <span style="font-size: 4rem;">⚡</span>
-            <h2>COMIC MODE</h2>
+            <span style="font-size: 5rem;">💥</span>
+            <h2 style="font-family:'Montserrat'">HERO COMIC</h2>
         </a>
-
-        <button class="change-name" onclick="clearName()">Name ändern</button>
     </div>
 
     <script>
-        document.getElementById('player-name').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') saveName();
-        });
-
         function saveName() {
             const name = document.getElementById('player-name').value.trim();
             if(name.length > 1) {
                 localStorage.setItem('quiz_username', name);
                 showSelection();
-            } else {
-                alert("Bitte gib einen Namen ein (min. 2 Zeichen)!");
             }
         }
-
         function showSelection() {
             document.getElementById('login-area').style.display = 'none';
             document.getElementById('selection-area').style.display = 'flex';
         }
-
-        function clearName() {
-            localStorage.removeItem('quiz_username');
-            location.reload();
-        }
-
-        window.onload = () => {
-            if(localStorage.getItem('quiz_username')) showSelection();
-        }
+        window.onload = () => { if(localStorage.getItem('quiz_username')) showSelection(); }
     </script>
 </body>
 </html>
