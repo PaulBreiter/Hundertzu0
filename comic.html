@@ -3,259 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QUIZ BATTLE 2.0 | Comic Edition</title>
+    <title>COMIC BATTLE 2.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&family=Montserrat:wght@900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@700&family=Montserrat:wght@900&display=swap');
         
-        :root { 
-            --bg: #fdfdfd; --surface: #ffffff; --primary: #6c5ce7; 
-            --accent: #fdcb6e; --success: #00b894; --danger: #ff4757; --text: #2d3436; --border: #000000; 
-        }
+        :root { --bg: #fdfdfd; --primary: #6c5ce7; --accent: #fdcb6e; --success: #00b894; --danger: #ff4757; }
 
         body { 
-            font-family: 'Fredoka', sans-serif; background: var(--bg); color: var(--text); 
-            margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh;
-            background-image: radial-gradient(var(--accent) 0.5px, transparent 0.5px);
-            background-size: 20px 20px; /* Dezenter Comic-Punkt-Hintergrund */
+            font-family: 'Fredoka', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center;
+            background-image: radial-gradient(#ddd 1px, transparent 1px); background-size: 20px 20px; min-height: 100vh;
         }
 
-        header { 
-            width: 100%; max-width: 600px; padding: 20px; position: sticky; top: 0; z-index: 1000; box-sizing: border-box;
+        header { width: 100%; max-width: 600px; padding: 15px; position: sticky; top: 0; z-index: 100; box-sizing: border-box; }
+        .status-panel { background: white; border: 4px solid #000; border-radius: 20px; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 8px 8px 0px #000; }
+        .file-info { font-size: 0.6rem; color: var(--primary); font-weight: 900; margin-top: 4px; text-transform: uppercase; }
+
+        .joker-row { display: flex; gap: 12px; margin: 20px 0; }
+        .joker-btn {
+            background: white; border: 3px solid #000; border-radius: 12px; width: 55px; height: 55px; font-size: 1.5rem;
+            cursor: pointer; transition: 0.2s; box-shadow: 4px 4px 0px #000; display: flex; align-items: center; justify-content: center;
         }
+        .joker-btn.active { background: var(--accent); transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
+        .joker-btn.used { opacity: 0.2; pointer-events: none; filter: grayscale(1); }
 
-        .status-box { 
-            background: white; border: 4px solid var(--border); border-radius: 25px; padding: 15px;
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 8px 8px 0px var(--border);
-        }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 90%; max-width: 800px; padding-bottom: 120px; }
+        .card { background: white; border: 4px solid #000; border-radius: 15px; padding: 20px 5px; text-align: center; cursor: pointer; box-shadow: 6px 6px 0px #000; transition: 0.2s; }
+        .card:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0px #000; }
+        .card.boss { background: var(--accent); grid-column: 1 / -1; border-style: dashed; }
+        .card.disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        .file-info { font-size: 0.7rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-top: 5px; }
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(108, 92, 231, 0.4); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal { background: white; width: 85%; max-width: 380px; padding: 25px; border-radius: 30px; border: 5px solid #000; text-align: center; box-shadow: 12px 12px 0px #000; }
 
-        .hp-display { font-family: 'Montserrat'; font-size: 2.2rem; display: flex; align-items: center; gap: 5px; }
+        .btn-main { background: var(--primary); color: white; border: 3px solid #000; padding: 15px; border-radius: 15px; font-weight: 900; cursor: pointer; width: 100%; box-shadow: 4px 4px 0px #000; margin-top: 10px; }
+        .btn-main:active { transform: translate(2px, 2px); box-shadow: none; }
+        .btn-sub { background: none; border: none; color: #666; cursor: pointer; text-decoration: underline; margin-top: 15px; font-weight: 700; font-size: 0.8rem; }
 
-        .joker-row { display: flex; gap: 15px; margin: 25px 0; }
-        .joker-box { 
-            background: white; border: 3px solid var(--border); border-radius: 18px; 
-            width: 65px; height: 65px; display: flex; align-items: center; justify-content: center; 
-            font-size: 1.8rem; cursor: pointer; transition: 0.2s; box-shadow: 4px 4px 0px var(--border);
-        }
-        .joker-box.active { background: var(--accent); transform: translate(2px, 2px); box-shadow: 2px 2px 0px var(--border); }
-        .joker-box.used { opacity: 0.2; pointer-events: none; filter: grayscale(1); box-shadow: none; transform: none; }
+        input { border: 3px solid #000; padding: 15px; border-radius: 12px; width: 80%; text-align: center; font-family: 'Montserrat'; font-size: 1.5rem; margin: 15px 0; outline: none; }
 
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; width: 92%; max-width: 800px; padding-bottom: 100px; }
-        .card { 
-            background: white; border: 4px solid var(--border); border-radius: 20px; padding: 25px 10px;
-            text-align: center; cursor: pointer; box-shadow: 6px 6px 0px var(--border); transition: 0.2s;
-        }
-        .card:hover { transform: translate(-2px, -2px); box-shadow: 10px 10px 0px var(--border); }
-        .card:active { transform: translate(4px, 4px); box-shadow: none; }
-        .card.disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
-
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(108, 92, 231, 0.4); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
-        .modal { background: white; width: 85%; max-width: 400px; padding: 35px; border-radius: 40px; border: 5px solid var(--border); text-align: center; box-shadow: 15px 15px 0px var(--border); }
-
-        .btn-main { 
-            background: var(--primary); color: white; border: 3px solid var(--border); padding: 15px; 
-            border-radius: 20px; font-family: 'Montserrat'; font-weight: 900; cursor: pointer; width: 100%; 
-            box-shadow: 5px 5px 0px var(--border); margin-top: 15px; font-size: 1.1rem;
-        }
-        .btn-main:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px var(--border); }
-        .btn-back { background: none; border: none; color: #888; font-weight: 700; cursor: pointer; margin-top: 15px; text-decoration: underline; }
-
-        input { border: 3px solid var(--border); padding: 15px; border-radius: 15px; width: 80%; text-align: center; font-family: 'Montserrat'; font-size: 1.5rem; outline: none; margin: 15px 0; }
-
-        @keyframes pow { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
-        .pow-effect { animation: pow 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        nav.bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; border-top: 4px solid #000; display: flex; justify-content: space-around; padding: 12px; box-sizing: border-box; }
+        .nav-btn { background: none; border: none; font-weight: 900; cursor: pointer; font-size: 0.7rem; font-family: 'Montserrat'; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="status-box">
+        <div class="status-panel">
             <div>
-                <div style="font-weight: 900; font-size: 0.9rem;">HELD: <span id="p-name" style="color:var(--primary)">...</span></div>
-                <div id="active-file" class="file-info">KEINE MISSION GELADEN</div>
+                <div style="font-weight:900; font-size:0.9rem" id="p-name">HERO</div>
+                <div id="file-name" class="file-info">MISSION: KEINE DATEI</div>
             </div>
-            <div class="hp-display">❤️<span id="hp-val">100</span></div>
+            <div style="font-family:'Montserrat'; font-size:1.8rem">❤️<span id="hp-val">100</span></div>
         </div>
     </header>
 
     <div class="joker-row">
-        <div class="joker-box" id="j-Schild" onclick="useJoker('Schild')">🛡️</div>
-        <div class="joker-box" id="j-Schwert" onclick="useJoker('Schwert')">⚔️</div>
-        <div class="joker-box" id="j-Trank" onclick="useJoker('Trank')">🧪</div>
+        <div class="joker-btn" id="j-Schild" onclick="toggleJoker('Schild')">🛡️</div>
+        <div class="joker-btn" id="j-Schwert" onclick="toggleJoker('Schwert')">⚔️</div>
+        <div class="joker-btn" id="j-Trank" onclick="toggleJoker('Trank')">🧪</div>
     </div>
 
     <div class="grid" id="game-grid"></div>
 
-    <div id="modal-setup" class="overlay"><div class="modal">
-        <h2 style="font-family:'Montserrat'">MISSION START</h2>
-        <p>Lade deine Excel-Datei hoch, um das Quiz zu starten!</p>
-        <input type="file" id="excel-file" accept=".xlsx, .xls" style="border:none; font-size:0.8rem;">
-        <button class="btn-main" onclick="processExcel()">DATEN LADEN!</button>
-        <button class="btn-back" id="cancel-setup" style="display:none" onclick="toggleModal('modal-setup', false)">Abbrechen</button>
+    <div id="modal-upload" class="overlay"><div class="modal">
+        <h2 style="font-family:'Montserrat'">MISSION LOAD</h2>
+        <input type="file" id="excel-input" accept=".xlsx, .xls" style="font-size:0.8rem; border:none">
+        <button class="btn-main" onclick="loadExcel()">DATEN SYNC</button>
+        <button class="btn-sub" onclick="closeM('modal-upload')">ABBRECHEN</button>
     </div></div>
 
     <div id="modal-quiz" class="overlay"><div class="modal">
-        <div id="m-cat" style="font-weight: 900; color:var(--primary); text-transform: uppercase; letter-spacing: 2px;">KATEGORIE</div>
-        <div id="m-q" style="font-size: 1.4rem; margin: 20px 0; font-weight: 700;">Frage wird geladen...</div>
-        <input type="number" id="ans-input" inputmode="numeric" placeholder="TIFF?">
-        <button class="btn-main" id="btn-submit" onclick="checkAnswer()">CHECK!</button>
-        <div id="m-feedback" style="margin-top:20px; font-weight: 900; font-size: 1.2rem;"></div>
-        <button id="btn-next" style="display:none; background:var(--success);" class="btn-main" onclick="nextRound()">WEITER!</button>
+        <div id="boss-tag" style="color:var(--danger); font-weight:900; display:none; margin-bottom:10px">💥 BOSS-RUNDE 💥</div>
+        <div id="q-cat" style="font-weight:900; color:var(--primary); text-transform:uppercase; font-size:0.7rem">Kategorie</div>
+        <div id="q-text" style="font-size:1.2rem; margin:15px 0; font-weight:700">Frage...</div>
+        <input type="number" id="ans-input" inputmode="numeric">
+        <button class="btn-main" id="btn-check" onclick="checkAns()">ANTWORTEN!</button>
+        <div id="feedback" style="margin-top:15px; font-weight:900"></div>
+        <button class="btn-main" id="btn-next" style="display:none; background:var(--success)" onclick="next()">NÄCHSTE RUNDE</button>
     </div></div>
 
-    <footer style="position: fixed; bottom: 0; width: 100%; display: flex; gap: 10px; padding: 15px; box-sizing: border-box;">
-        <button onclick="toggleModal('modal-setup', true)" style="flex:1; background:white; border:3px solid var(--border); padding:10px; border-radius:15px; font-weight: 800; cursor: pointer;">NEUE DATEI</button>
-        <button onclick="location.reload()" style="flex:1; background:white; border:3px solid var(--border); padding:10px; border-radius:15px; font-weight: 800; cursor: pointer;">RESET</button>
-    </footer>
+    <nav class="bottom-nav">
+        <button class="nav-btn" onclick="location.href='index.html'">🏠 MENÜ</button>
+        <button class="nav-btn" onclick="openM('modal-upload')">📁 DATEI</button>
+        <button class="nav-btn" onclick="location.reload()">🔄 RESET</button>
+    </nav>
 
     <script>
-        const SUPABASE_URL = 'https://eaxuqsiwrfqshqkwtnlz.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_PViFkgap3gvsxBgG2NSAjA_Oc0eASzI';
-        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const sb = supabase.createClient('https://eaxuqsiwrfqshqkwtnlz.supabase.co', 'sb_publishable_PViFkgap3gvsxBgG2NSAjA_Oc0eASzI');
+        let questions = JSON.parse(localStorage.getItem('comic_v2')) || [];
+        let hp = 100, score = 0, qDone = 0, activeJoker = null, curIdx = null;
+        let usedJokers = { Schild: false, Schwert: false, Trank: false }, catUsage = {};
 
-        let questions = JSON.parse(localStorage.getItem('comic_data_v2')) || [];
-        let hp = 100, score = 0, qCounter = 0, currentIdx = null, activeJoker = null;
-        let usedJokers = { Schild: false, Schwert: false, Trank: false }, categoryUsage = {};
+        function openM(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeM(id) { document.getElementById(id).style.display = 'none'; }
 
-        function toggleModal(id, show) { 
-            document.getElementById(id).style.display = show ? 'flex' : 'none'; 
-        }
-
-        // NEU: Joker Toggle (Abwählen möglich)
-        function useJoker(type) {
+        function toggleJoker(type) {
             if(usedJokers[type]) return;
-            if(activeJoker === type) {
-                activeJoker = null;
-                document.getElementById('j-'+type).classList.remove('active');
-            } else {
-                activeJoker = type;
-                document.querySelectorAll('.joker-box').forEach(b => b.classList.remove('active'));
-                document.getElementById('j-'+type).classList.add('active');
-            }
+            const btn = document.getElementById('j-'+type);
+            if(activeJoker === type) { activeJoker = null; btn.classList.remove('active'); }
+            else { activeJoker = type; document.querySelectorAll('.joker-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
         }
 
-        function processExcel() {
-            const file = document.getElementById('excel-file').files[0];
+        function loadExcel() {
+            const file = document.getElementById('excel-input').files[0];
             if(!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
-                const data = new Uint8Array(e.target.result);
-                const wb = XLSX.read(data, {type: 'array'});
-                const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-                
-                questions = json.map(r => ({
-                    cat: r.Kategorie || r.cat || "Allgemein",
-                    q: r.Frage || r.q,
+                const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+                const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                questions = data.map(r => ({
+                    c: r.Kategorie || "Allgemein", q: r.Frage || r.q,
                     a: parseFloat(String(r.Antwort || r.a).replace(/[^0-9.-]/g, '')),
-                    isBoss: String(r.Boss || "").toLowerCase().includes('ja'),
-                    used: false
-                })).filter(q => q.q && !isNaN(q.a));
-
-                localStorage.setItem('comic_data_v2', JSON.stringify(questions));
-                localStorage.setItem('active_filename', file.name);
+                    b: String(r.Boss || "").toLowerCase().includes('ja'), u: false
+                })).filter(x => x.q && !isNaN(x.a));
+                localStorage.setItem('comic_v2', JSON.stringify(questions));
+                localStorage.setItem('comic_filename', file.name);
                 location.reload();
             };
             reader.readAsArrayBuffer(file);
         }
 
-        function renderBoard() {
-            const grid = document.getElementById('game-grid');
-            grid.innerHTML = "";
-            const nextQ = qCounter + 1;
-            const isBossRound = (nextQ % 4 === 0);
-
-            if(isBossRound) {
-                const card = document.createElement('div');
-                card.className = "card pow-effect"; card.style.gridColumn = "1/-1"; card.style.background = "var(--accent)";
-                card.innerHTML = `<div style="font-family:'Montserrat'; font-size:1.4rem;">💥 BOSS-KAMPF! 💥</div>`;
-                card.onclick = () => {
-                    const pool = questions.filter(q => q.isBoss && !q.used);
-                    startQuiz(questions.indexOf(pool[0] || questions.find(q => !q.used)), true);
-                };
+        function render() {
+            const grid = document.getElementById('game-grid'); grid.innerHTML = "";
+            const isBoss = ((qDone + 1) % 4 === 0);
+            if(isBoss) {
+                const card = document.createElement('div'); card.className = "card boss";
+                card.innerHTML = `<div style="font-size:1.3rem">💥 BOSS FIGHT 💥</div>`;
+                card.onclick = () => { const bQ = questions.find(q => q.b && !q.u) || questions.find(q => !q.u); start(questions.indexOf(bQ), true); };
                 grid.appendChild(card);
             } else {
-                [...new Set(questions.map(q => q.cat))].forEach(cat => {
-                    const u = categoryUsage[cat] || 0;
-                    const card = document.createElement('div');
+                [...new Set(questions.map(q => q.c))].forEach(cat => {
+                    const u = catUsage[cat] || 0; const card = document.createElement('div');
                     card.className = "card" + (u >= 2 ? " disabled" : "");
-                    card.innerHTML = `<div style="font-weight:800;">${cat}</div><div style="font-size:0.7rem; color:#888;">ERLEDIGT: ${u}/2</div>`;
-                    if(u < 2) card.onclick = () => {
-                        const pool = questions.filter(q => q.cat === cat && !q.used);
-                        startQuiz(questions.indexOf(pool[Math.floor(Math.random()*pool.length)]));
-                        categoryUsage[cat] = u + 1;
-                    };
+                    card.innerHTML = `<strong>${cat}</strong><br><small>${u}/2</small>`;
+                    if(u < 2) card.onclick = () => { start(questions.findIndex(q => q.c === cat && !q.u)); catUsage[cat] = u + 1; };
                     grid.appendChild(card);
                 });
             }
         }
 
-        function startQuiz(idx, boss = false) {
-            currentIdx = idx;
-            const modalEl = document.querySelector('#modal-quiz .modal');
-            modalEl.classList.add('pow-effect');
-            document.getElementById('m-cat').innerText = questions[idx].cat;
-            document.getElementById('m-q').innerText = questions[idx].q;
-            document.getElementById('m-feedback').innerText = "";
-            document.getElementById('ans-input').value = "";
-            document.getElementById('btn-submit').style.display = 'block';
-            document.getElementById('btn-next').style.display = 'none';
-            toggleModal('modal-quiz', true);
-            setTimeout(() => modalEl.classList.remove('pow-effect'), 500);
+        function start(idx, boss = false) {
+            curIdx = idx; document.getElementById('boss-tag').style.display = boss ? 'block' : 'none';
+            document.getElementById('q-cat').innerText = questions[idx].c;
+            document.getElementById('q-text').innerText = questions[idx].q;
+            document.getElementById('feedback').innerText = ""; document.getElementById('ans-input').value = "";
+            document.getElementById('btn-next').style.display = 'none'; document.getElementById('btn-check').style.display = 'block';
+            openM('modal-quiz');
         }
 
-        function checkAnswer() {
-            const q = questions[currentIdx];
-            const guess = parseFloat(document.getElementById('ans-input').value);
+        function checkAns() {
+            const q = questions[curIdx]; const guess = parseFloat(document.getElementById('ans-input').value);
             if(isNaN(guess)) return;
-
             let diff = Math.abs(guess - q.a);
             if(activeJoker === 'Schild' && diff > 10) diff = 10;
             if(activeJoker === 'Trank') diff = Math.floor(diff/2);
-
-            if(diff === 0) {
-                let heal = (activeJoker === 'Schwert') ? 15 : 5;
-                hp = Math.min(100, hp + heal); score += 500;
-                document.getElementById('m-feedback').innerHTML = `<span style="color:var(--success)">ZACK! VOLLE PUNKTZAHL! +${heal} ❤️</span>`;
-            } else {
-                hp -= diff; score += Math.max(0, 100 - diff);
-                document.getElementById('m-feedback').innerHTML = `<span style="color:var(--danger)">POW! -${diff} ❤️ | RICHTIG: ${q.a}</span>`;
-            }
-
-            if(activeJoker) {
-                usedJokers[activeJoker] = true;
-                document.getElementById('j-'+activeJoker).classList.add('used');
-                activeJoker = null;
-            }
-
-            q.used = true; qCounter++;
-            document.getElementById('hp-val').innerText = hp;
-            document.getElementById('btn-submit').style.display = 'none';
-            document.getElementById('btn-next').style.display = 'block';
-            if(hp <= 0 || qCounter >= 20) endGame();
+            if(diff === 0) { let h = (activeJoker==='Schwert')?15:5; hp=Math.min(100, hp+h); score+=500; document.getElementById('feedback').innerHTML=`<span style="color:var(--success)">VOLTREFFER! +${h} ❤️</span>`; }
+            else { hp-=diff; score+=Math.max(0, 100-diff); document.getElementById('feedback').innerHTML=`<span style="color:var(--danger)">BOOM! -${diff} ❤️ | LÖSUNG: ${q.a}</span>`; }
+            if(activeJoker) { usedJokers[activeJoker]=true; document.getElementById('j-'+activeJoker).classList.add('used'); activeJoker=null; }
+            q.u = true; qDone++; document.getElementById('hp-val').innerText = hp;
+            document.getElementById('btn-check').style.display='none'; document.getElementById('btn-next').style.display='block';
+            if(hp <= 0 || qDone >= 20) end();
         }
 
-        function nextRound() { toggleModal('modal-quiz', false); renderBoard(); }
-
-        async function endGame() {
-            const name = localStorage.getItem('quiz_username');
-            await sb.from('highscores').insert([{ name, score }]);
-            alert("BATTLE ENDE! SCORE: " + score);
-            location.reload();
-        }
+        function next() { closeM('modal-quiz'); render(); }
+        async function end() { const n = localStorage.getItem('quiz_username') || 'Held'; await sb.from('highscores').insert([{ name:n, score }]); alert("SCORE: "+score); location.reload(); }
 
         window.onload = () => {
-            document.getElementById('p-name').innerText = localStorage.getItem('quiz_username') || "Held";
-            const fName = localStorage.getItem('active_filename');
-            if(fName) {
-                document.getElementById('active-file').innerText = "MISSION: " + fName;
-                document.getElementById('cancel-setup').style.display = 'inline-block';
-            }
-            if(questions.length > 0) renderBoard();
-            else toggleModal('modal-setup', true);
+            document.getElementById('p-name').innerText = localStorage.getItem('quiz_username') || "HERO";
+            const f = localStorage.getItem('comic_filename'); if(f) document.getElementById('file-name').innerText = "MISSION: " + f;
+            if(questions.length > 0) render(); else openM('modal-upload');
         };
     </script>
 </body>
