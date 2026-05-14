@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SPACE QUIZ | Neon Mission</title>
+    <title>SPACE QUIZ | Mission Control</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -15,117 +15,76 @@
             padding: 20px;
             color: #e2e8f0;
         }
-        .app-container { max-width: 1300px; margin: 0 auto; }
+        .app-container { max-width: 1400px; margin: 0 auto; }
         .header-stats {
             background: #0f111a;
-            border-radius: 28px;
-            padding: 16px 24px;
-            margin-bottom: 24px;
+            border-radius: 32px;
+            padding: 20px 28px;
+            margin-bottom: 28px;
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
             border: 1px solid #2d3748;
-            box-shadow: 0 0 12px rgba(0,255,255,0.1);
+            box-shadow: 0 0 15px rgba(0,255,255,0.1);
+            gap: 15px;
         }
-        .player-info span {
-            background: #1a1f2e;
-            padding: 6px 14px;
-            border-radius: 40px;
-            margin-right: 12px;
-        }
-        .hp-bar-bg {
-            width: 150px;
-            height: 10px;
-            background: #2d3748;
-            border-radius: 10px;
-            overflow: hidden;
-        }
+        .player-info { display: flex; gap: 15px; flex-wrap: wrap; }
+        .player-info span { background: #1a1f2e; padding: 8px 18px; border-radius: 40px; font-size: 0.9rem; }
+        .hp-area { display: flex; align-items: center; gap: 15px; }
+        .hp-bar-bg { width: 180px; height: 12px; background: #2d3748; border-radius: 20px; overflow: hidden; }
         #hp-bar-fill { height: 100%; background: #00ff88; }
-        .boss-badge { background: #ff0055; padding: 6px 18px; border-radius: 40px; font-weight: bold; }
-        .joker-row { display: flex; gap: 15px; justify-content: center; margin-bottom: 25px; }
+        .boss-badge { background: #ff0055; padding: 8px 24px; border-radius: 40px; font-weight: bold; }
+        .file-badge { background: #1a1f2e; padding: 6px 14px; border-radius: 40px; font-size: 0.7rem; border: 1px solid #4a5568; }
+        .joker-row { display: flex; gap: 20px; justify-content: center; margin-bottom: 35px; }
         .joker-box {
-            background: #0f111a;
-            border: 1px solid #4a5568;
-            border-radius: 60px;
-            padding: 10px 25px;
-            cursor: pointer;
+            background: #0f111a; border: 1px solid #4a5568; border-radius: 60px;
+            padding: 12px 32px; cursor: pointer; font-weight: bold; transition: 0.1s;
         }
-        .joker-box.active { border-color: #00d4ff; box-shadow: 0 0 12px #00d4ff; }
+        .joker-box.active { border-color: #00d4ff; box-shadow: 0 0 15px #00d4ff; transform: scale(0.97); }
         .joker-box.used { opacity: 0.3; pointer-events: none; }
         .categories-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 24px;
-            margin-bottom: 40px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
         }
         .category-card {
             background: #0f111a;
-            border-radius: 28px;
-            padding: 20px;
+            border-radius: 32px;
+            padding: 28px 24px;
             border: 1px solid #2d3748;
+            transition: 0.2s;
+            cursor: pointer;
         }
-        .category-card.disabled { opacity: 0.4; filter: grayscale(0.5); }
-        .category-title { font-size: 1.4rem; font-weight: bold; display: flex; justify-content: space-between; }
+        .category-card.disabled { opacity: 0.4; filter: grayscale(0.5); cursor: not-allowed; }
+        .category-title { font-size: 1.7rem; font-weight: bold; display: flex; justify-content: space-between; margin-bottom: 12px; }
+        .category-meta { margin: 20px 0; font-size: 0.9rem; color: #9ca3af; }
         .btn-waehlen {
             background: #00d4ff;
             border: none;
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border-radius: 50px;
             font-weight: bold;
+            font-size: 1rem;
             color: #000;
             cursor: pointer;
+            transition: 0.2s;
         }
-        .footer-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+        .btn-waehlen:hover { background: #00b8e6; transform: translateY(-2px); }
+        .footer-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
         .btn-footer {
-            background: #0f111a;
-            border: 1px solid #4a5568;
-            padding: 10px 24px;
-            border-radius: 40px;
-            cursor: pointer;
-            color: white;
+            background: #0f111a; border: 1px solid #4a5568; padding: 12px 28px;
+            border-radius: 50px; cursor: pointer; color: white; font-weight: bold;
         }
-        .overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(5px);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-card {
-            background: #0f111a;
-            border: 1px solid #00d4ff;
-            border-radius: 32px;
-            padding: 28px;
-            max-width: 500px;
-            width: 90%;
-        }
-        input, .double-input input {
-            background: #1a1f2e;
-            border: 1px solid #4a5568;
-            border-radius: 60px;
-            padding: 14px;
-            width: 100%;
-            color: white;
-            text-align: center;
-        }
-        .btn-primary {
-            background: #ff0055;
-            border: none;
-            padding: 14px;
-            border-radius: 60px;
-            font-weight: bold;
-            width: 100%;
-            margin-top: 12px;
-            cursor: pointer;
-        }
-        @keyframes shake { /* gleiche wie comic */ 0%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} 100%{transform:translateX(0)} }
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-card { background: #0f111a; border: 1px solid #00d4ff; border-radius: 48px; padding: 32px; max-width: 500px; width: 90%; text-align: center; }
+        input, .double-input input { background: #1a1f2e; border: 1px solid #4a5568; border-radius: 60px; padding: 14px 20px; width: 100%; color: white; text-align: center; margin: 10px 0; }
+        .btn-primary { background: #ff0055; border: none; padding: 14px; border-radius: 60px; font-weight: bold; width: 100%; margin-top: 12px; cursor: pointer; }
+        @keyframes shake { 0%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} 100%{transform:translateX(0)} }
         .shake { animation: shake 0.3s ease; }
-        @keyframes celebrate { 0%{transform:scale(1)} 50%{transform:scale(1.03); border-color:#00ff88} 100%{transform:scale(1)} }
+        @keyframes celebrate { 0%{transform:scale(1)} 50%{transform:scale(1.02); border-color:#00ff88;} 100%{transform:scale(1)} }
         .winner { animation: celebrate 0.5s ease; }
     </style>
 </head>
@@ -133,12 +92,13 @@
 <div class="app-container">
     <div class="header-stats">
         <div class="player-info">
-            <span>👨‍🚀 <span id="player-display">Pilot</span></span>
+            <span>🚀 <span id="player-display">Pilot</span></span>
             <span>📡 RUNDE <span id="q-count">0</span>/20</span>
             <span>⚡ PUNKTE <span id="current-score">0</span></span>
         </div>
-        <div><span>❤️ <span id="hp-val">100</span></span> <div class="hp-bar-bg"><div id="hp-bar-fill"></div></div></div>
+        <div class="hp-area"><span>❤️ <span id="hp-val">100</span></span><div class="hp-bar-bg"><div id="hp-bar-fill"></div></div></div>
         <div class="boss-badge">⚠️ BOSS in <span id="boss-circle">4</span></div>
+        <div class="file-badge" id="file-indicator">📡 Keine Datei</div>
     </div>
     <div class="joker-row">
         <div class="joker-box" id="j-Schild" onclick="useJoker('Schild')">🛡️ SCHILD</div>
@@ -154,25 +114,28 @@
     </div>
 </div>
 
-<!-- Modal gleiche Struktur wie comic, aber mit Space-Farben -->
-<div id="modal-quiz" class="overlay"><div class="modal-card"><div id="m-cat-ui" style="font-size:1.2rem;">Kategorie</div><div id="m-q" style="margin:20px 0;"></div><div id="input-container"><input type="number" id="ans-input" placeholder="Antwort"></div><button class="btn-primary" id="btn-submit" onclick="checkAnswer()">PRÜFEN</button><div id="m-feedback"></div><button id="btn-next" style="display:none;" class="btn-primary" onclick="nextRound()">WEITER</button></div></div>
+<!-- Modals (gleiche Struktur wie comic, aber Space-Farben) -->
+<div id="modal-quiz" class="overlay"><div class="modal-card"><div id="m-cat-ui" style="font-size:1.2rem;"></div><div id="m-q" style="margin:20px 0;"></div><div id="input-container"><input type="number" id="ans-input" placeholder="Antwort"></div><button class="btn-primary" id="btn-submit" onclick="checkAnswer()">PRÜFEN</button><div id="m-feedback"></div><button id="btn-next" style="display:none;" class="btn-primary" onclick="nextRound()">WEITER</button></div></div>
 <div id="modal-ranking" class="overlay"><div class="modal-card"><h2>🏆 BESTENLISTE</h2><div id="ranking-list"></div><button class="btn-primary" onclick="toggleModal('modal-ranking', false)">SCHLIESSEN</button></div></div>
 <div id="modal-setup" class="overlay"><div class="modal-card"><h2>📡 DATENIMPORT</h2><input type="file" id="excel-file" accept=".xlsx, .xls"><button class="btn-primary" onclick="processExcel()">HOCHLADEN</button></div></div>
 <div id="modal-guide" class="overlay"><div class="modal-card"><h2>📋 MISSION</h2><div style="text-align:left;"><ul><li>20 Fragen, Boss alle 4 Runden</li><li>Kategorien max. 2x wählbar</li><li>Differenz = Schaden, Volltreffer heilt</li><li>Joker: Schild (max 10 Schaden), Schwert (2 Antworten), Lebenstrank (+15 HP bei Volltreffer)</li></ul></div><button class="btn-primary" onclick="toggleModal('modal-guide', false)">START</button></div></div>
 
 <script>
-    // Gleiche Logik wie in comic.html – aus Platzgründen hier identisch (nur Variablenname pilotName)
     const SUPABASE_URL = 'https://eaxuqsiwrfqshqkwtnlz.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_PViFkgap3gvsxBgG2NSAjA_Oc0eASzI';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let questions = JSON.parse(localStorage.getItem('p0_v3')) || [];
     let hp = 100, score = 0, qCounter = 0, currentIdx = null, activeJoker = null, playerName = "";
     let usedJokers = { Schild: false, Schwert: false, Lebenstrank: false }, categoryUsage = {};
+    let currentFileName = localStorage.getItem('quiz_filename') || "Keine Datei";
+    let questionCount = questions.length;
+    function updateFileIndicator() { let text = currentFileName; if(questionCount>0) text+=` (${questionCount} Fragen)`; document.getElementById('file-indicator').innerText = `📡 ${text}`; }
     function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
     window.onload = () => {
         playerName = localStorage.getItem('quiz_username');
         if(!playerName) { window.location.href = 'index.html'; return; }
         document.getElementById('player-display').innerText = playerName;
+        updateFileIndicator();
         if(questions.length < 5) toggleModal('modal-setup', true); else renderCategories();
     };
     async function showRanking() {
@@ -180,7 +143,7 @@
         const listDiv = document.getElementById('ranking-list');
         listDiv.innerHTML = "Lade...";
         const { data, error } = await supabaseClient.from('highscores').select('*').order('score', { ascending: false }).limit(5);
-        if(error) listDiv.innerHTML = "Fehler"; else listDiv.innerHTML = data.map((s,i) => `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #333"><span>${i+1}. ${s.name}</span><b>${s.score} Pkt</b></div>`).join('');
+        if(error) listDiv.innerHTML = "Fehler"; else listDiv.innerHTML = data.map((s,i)=>`<div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid #333;"><span>${i+1}. ${s.name}</span><b>${s.score} Pkt</b></div>`).join('');
     }
     function processExcel() {
         const file = document.getElementById('excel-file').files[0];
@@ -192,6 +155,10 @@
             const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
             questions = json.map(r => ({ cat: r.Kategorie || "Allgemein", q: r.Frage, a: parseInt(r.Antwort), isBoss: (r.Boss && r.Boss.toString().toLowerCase() === 'ja'), used: false }));
             localStorage.setItem('p0_v3', JSON.stringify(questions));
+            localStorage.setItem('quiz_filename', file.name);
+            currentFileName = file.name;
+            questionCount = questions.length;
+            updateFileIndicator();
             location.reload();
         };
         reader.readAsArrayBuffer(file);
@@ -201,8 +168,8 @@
         container.innerHTML = "";
         const nextRound = qCounter + 1;
         if ((nextRound % 4 === 0) || (nextRound === 20)) {
-            const bossCard = document.createElement('div'); bossCard.className = "category-card"; bossCard.style.borderColor = "#ff0055";
-            bossCard.innerHTML = `<div class="category-title">🔥 BOSS-SEKTOR 🔥</div><div class="category-meta">Runde ${nextRound}</div><button class="btn-waehlen" style="background:#ff0055;">KAMPF AUFNEHMEN</button>`;
+            const bossCard = document.createElement('div'); bossCard.className = "category-card"; bossCard.style.borderColor = "#ff0055"; bossCard.style.background = "#1a0f1a";
+            bossCard.innerHTML = `<div class="category-title">🔥 BOSS-SEKTOR 🔥</div><div class="category-meta">Runde ${nextRound}</div><button class="btn-waehlen" style="background:#ff0055; color:white;">KAMPF AUFNEHMEN</button>`;
             bossCard.querySelector('button').onclick = () => {
                 const bossList = questions.filter(q => q.isBoss && !q.used);
                 if(bossList.length === 0) { alert("Keine Boss-Daten"); const normal = questions.find(q => !q.used); if(normal) currentIdx = questions.indexOf(normal); else return; }
@@ -216,7 +183,7 @@
             const usedCount = categoryUsage[cat] || 0;
             const disabled = usedCount >= 2;
             const card = document.createElement('div'); card.className = "category-card" + (disabled ? " disabled" : "");
-            card.innerHTML = `<div class="category-title"><span>${cat}</span><span>${usedCount}/2</span></div><div class="category-meta">${questions.filter(q => q.cat === cat && !q.used).length} offen</div><button class="btn-waehlen" ${disabled ? 'disabled' : ''}>🎯 WÄHLEN</button>`;
+            card.innerHTML = `<div class="category-title"><span>${cat}</span><span>${usedCount}/2</span></div><div class="category-meta">📡 ${questions.filter(q => q.cat === cat && !q.used).length} offen</div><button class="btn-waehlen" ${disabled ? 'disabled' : ''}>🎯 WÄHLEN</button>`;
             if(!disabled) card.querySelector('button').onclick = () => {
                 const available = questions.filter(q => q.cat === cat && !q.used);
                 if(available.length === 0) return alert("Keine Fragen mehr");
@@ -257,7 +224,8 @@
             if(isNaN(g1) && isNaN(g2)) return;
             let d1 = isNaN(g1)?Infinity:Math.abs(g1-q.a), d2 = isNaN(g2)?Infinity:Math.abs(g2-q.a);
             diff = Math.min(d1,d2);
-            document.getElementById('m-feedback').innerHTML = `<small>Besserer Wert: ${d1<=d2?g1:g2}</small><br>`;
+            let better = (d1<=d2)?g1:g2;
+            document.getElementById('m-feedback').innerHTML = `<small>Bessere Antwort: ${better}</small><br>`;
         } else { let g = parseInt(document.getElementById('ans-input')?.value); if(isNaN(g)) return; diff = Math.abs(g - q.a); }
         if(activeJoker === 'Schild' && diff > 10) diff = 10;
         const modalDiv = document.querySelector('#modal-quiz .modal-card');
@@ -266,7 +234,7 @@
             hp = Math.min(100, hp + heal);
             score += 250;
             modalDiv.classList.add('winner');
-            document.getElementById('m-feedback').innerHTML += `<span style="color:#00ff88;">🎯 VOLLTREFFER! +250 Punkte, +${heal} HP</span>`;
+            document.getElementById('m-feedback').innerHTML += `<span style="color:#00ff88;">🎯 VOLLTREFFER! +250 Pkt, +${heal} HP</span>`;
         } else {
             let dmg = diff;
             hp -= dmg;
@@ -283,8 +251,8 @@
     }
     async function nextRound() {
         toggleModal('modal-quiz', false);
-        if(hp<=0) { alert(`💀 GAME OVER – ${score} Punkte`); if(score>0) await supabaseClient.from('highscores').insert([{name:playerName, score}]); location.reload(); }
-        else if(qCounter>=20) { alert(`🏆 GESCHAFFT! ${score} Punkte`); if(score>0) await supabaseClient.from('highscores').insert([{name:playerName, score}]); location.reload(); }
+        if(hp<=0) { alert(`💀 MISSION FEHLGESCHLAGEN! ${score} Punkte.`); if(score>0) await supabaseClient.from('highscores').insert([{name:playerName, score}]); location.reload(); }
+        else if(qCounter>=20) { alert(`🏆 MISSION ERFOLGREICH! ${score} Punkte.`); if(score>0) await supabaseClient.from('highscores').insert([{name:playerName, score}]); location.reload(); }
         else renderCategories();
     }
 </script>
